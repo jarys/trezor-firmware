@@ -488,6 +488,8 @@ if utils.BITCOIN_ONLY:
     import apps.eos.writers
     apps.ethereum
     import apps.ethereum
+    apps.ethereum.abi
+    import apps.ethereum.abi
     apps.ethereum.address
     import apps.ethereum.address
     apps.ethereum.get_address
@@ -506,6 +508,8 @@ if utils.BITCOIN_ONLY:
     import apps.ethereum.sign_tx
     apps.ethereum.sign_tx_eip1559
     import apps.ethereum.sign_tx_eip1559
+    apps.ethereum.sign_typed_data
+    import apps.ethereum.sign_typed_data
     apps.ethereum.tokens
     import apps.ethereum.tokens
     apps.ethereum.verify_message
