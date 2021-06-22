@@ -1,6 +1,8 @@
 use core::ops::{Add, Sub};
 
-/// Relative offset in 2D space.
+/// Relative offset in 2D space, used for representing translation and
+/// dimensions of objects. Absolute positions on the screen are represented by
+/// the `Point` type.
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Offset {
     pub x: i32,
@@ -8,11 +10,15 @@ pub struct Offset {
 }
 
 impl Offset {
-    pub fn new(x: i32, y: i32) -> Self {
+    pub const fn new(x: i32, y: i32) -> Self {
         Self { x, y }
     }
 
-    pub fn zero() -> Self {
+    pub const fn uniform(a: i32) -> Self {
+        Self::new(a, a)
+    }
+
+    pub const fn zero() -> Self {
         Self::new(0, 0)
     }
 
@@ -21,7 +27,24 @@ impl Offset {
     }
 }
 
-/// A point in 2D space defined by the the `x` and `y` coordinate.
+impl Add<Offset> for Offset {
+    type Output = Offset;
+
+    fn add(self, rhs: Offset) -> Self::Output {
+        Self::new(self.x + rhs.x, self.y + rhs.y)
+    }
+}
+
+impl Sub<Offset> for Offset {
+    type Output = Offset;
+
+    fn sub(self, rhs: Offset) -> Self::Output {
+        Self::new(self.x - rhs.x, self.y - rhs.y)
+    }
+}
+
+/// A point in 2D space defined by the the `x` and `y` coordinate. Relative
+/// coordinates, vectors, and offsets are represented by the `Offset` type.
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Point {
     pub x: i32,
@@ -29,15 +52,15 @@ pub struct Point {
 }
 
 impl Point {
-    pub fn new(x: i32, y: i32) -> Self {
+    pub const fn new(x: i32, y: i32) -> Self {
         Self { x, y }
     }
 
-    pub fn zero() -> Self {
+    pub const fn zero() -> Self {
         Self::new(0, 0)
     }
 
-    pub fn midpoint(self, rhs: Self) -> Self {
+    pub fn center(self, rhs: Self) -> Self {
         Self::new((self.x + rhs.x) / 2, (self.y + rhs.y) / 2)
     }
 }
@@ -77,7 +100,7 @@ pub struct Rect {
 }
 
 impl Rect {
-    pub fn new(p0: Point, p1: Point) -> Self {
+    pub const fn new(p0: Point, p1: Point) -> Self {
         Self {
             x0: p0.x,
             y0: p0.y,
@@ -86,8 +109,17 @@ impl Rect {
         }
     }
 
-    pub fn with_size(p0: Point, size: Offset) -> Self {
+    pub fn from_top_left_and_size(p0: Point, size: Offset) -> Self {
         Self::new(p0, p0 + size)
+    }
+
+    pub fn from_center_and_size(m: Point, size: Offset) -> Self {
+        Self {
+            x0: m.x - size.x / 2,
+            y0: m.y - size.y / 2,
+            x1: m.x + size.x / 2,
+            y1: m.y + size.y / 2,
+        }
     }
 
     pub fn width(&self) -> i32 {
@@ -114,8 +146,8 @@ impl Rect {
         Point::new(self.x1, self.y1)
     }
 
-    pub fn midpoint(&self) -> Point {
-        self.top_left().midpoint(self.bottom_right())
+    pub fn center(&self) -> Point {
+        self.top_left().center(self.bottom_right())
     }
 
     pub fn contains(&self, point: Point) -> bool {
@@ -128,6 +160,24 @@ impl Rect {
             y0: self.y0 + uniform,
             x1: self.x1 - uniform,
             y1: self.y1 - uniform,
+        }
+    }
+
+    pub fn cut_from_left(&self, width: i32) -> Self {
+        Self {
+            x0: self.x0,
+            y0: self.y0,
+            x1: self.x0 + width,
+            y1: self.y1,
+        }
+    }
+
+    pub fn cut_from_right(&self, width: i32) -> Self {
+        Self {
+            x0: self.x1 - width,
+            y0: self.y0,
+            x1: self.x1,
+            y1: self.y1,
         }
     }
 }

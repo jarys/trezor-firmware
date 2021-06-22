@@ -6,7 +6,7 @@ use crate::ui::{
     theme,
 };
 
-use super::component::{Component, Event, EventCtx, Widget};
+use super::component::{Component, Event, EventCtx};
 
 pub enum SwipeDirection {
     Up,
@@ -16,7 +16,7 @@ pub enum SwipeDirection {
 }
 
 pub struct Swipe {
-    widget: Widget,
+    area: Rect,
     allow_up: bool,
     allow_down: bool,
     allow_left: bool,
@@ -31,7 +31,7 @@ impl Swipe {
 
     pub fn new(area: Rect) -> Self {
         Self {
-            widget: Widget::new(area),
+            area,
             allow_up: false,
             allow_down: false,
             allow_left: false,
@@ -84,14 +84,9 @@ impl Swipe {
 impl Component for Swipe {
     type Msg = SwipeDirection;
 
-    fn widget(&mut self) -> &mut Widget {
-        &mut self.widget
-    }
-
     fn event(&mut self, _ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        let area = self.area();
         match (event, self.origin) {
-            (Event::TouchStart(pos), _) if area.contains(pos) => {
+            (Event::TouchStart(pos), _) if self.area.contains(pos) => {
                 // Mark the starting position of this touch.
                 self.origin.replace(pos);
             }

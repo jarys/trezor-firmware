@@ -1,4 +1,4 @@
-use super::{component::Widget, Component, Event, EventCtx};
+use super::{Component, Event, EventCtx};
 
 pub struct Map<T, F> {
     inner: T,
@@ -17,10 +17,6 @@ where
     F: FnMut(T::Msg) -> M,
 {
     type Msg = M;
-
-    fn widget(&mut self) -> &mut Widget {
-        self.inner.widget()
-    }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.inner.event(ctx, event).map(&mut self.map_fn)

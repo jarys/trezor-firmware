@@ -10,7 +10,7 @@ use crate::ui::{
 
 use super::{
     button::{Button, ButtonContent, ButtonMsg::Clicked},
-    component::{Component, Event, EventCtx, Never, TimerToken, Widget},
+    component::{Child, Component, Event, EventCtx, Never, TimerToken},
     swipe::{Swipe, SwipeDirection},
 };
 
@@ -20,12 +20,11 @@ pub enum PassphraseKeyboardMsg {
 }
 
 pub struct PassphraseKeyboard {
-    widget: Widget,
-    textbox: TextBox,
     page_swipe: Swipe,
-    back_btn: Button,
-    confirm_btn: Button,
-    key_btns: [[Button; KEYS]; PAGES],
+    textbox: Child<TextBox>,
+    back_btn: Child<Button>,
+    confirm_btn: Child<Button>,
+    key_btns: [[Child<Button>; KEYS]; PAGES],
     key_page: usize,
     pending: Option<Pending>,
 }
@@ -50,14 +49,21 @@ impl PassphraseKeyboard {
         let key_grid = Grid::new(area, 5, 3);
 
         let text = Vec::new();
-        let textbox = TextBox::new(textbox_area, text);
         let page_swipe = Swipe::horizontal(area);
-        let confirm_btn = Button::with_text(confirm_btn_area, b"Confirm", theme::button_confirm());
-        let back_btn = Button::with_text(back_btn_area, b"Back", theme::button_clear());
+        let textbox = Child::new(TextBox::new(textbox_area, text));
+        let confirm_btn = Child::new(Button::with_text(
+            confirm_btn_area,
+            b"Confirm",
+            theme::button_confirm(),
+        ));
+        let back_btn = Child::new(Button::with_text(
+            back_btn_area,
+            b"Back",
+            theme::button_clear(),
+        ));
         let key_btns = Self::generate_keyboard(&key_grid);
 
         Self {
-            widget: Widget::new(area),
             textbox,
             page_swipe,
             confirm_btn,
@@ -68,7 +74,7 @@ impl PassphraseKeyboard {
         }
     }
 
-    fn generate_keyboard(grid: &Grid) -> [[Button; KEYS]; PAGES] {
+    fn generate_keyboard(grid: &Grid) -> [[Child<Button>; KEYS]; PAGES] {
         [
             Self::generate_key_page(grid, 0),
             Self::generate_key_page(grid, 1),
@@ -77,7 +83,7 @@ impl PassphraseKeyboard {
         ]
     }
 
-    fn generate_key_page(grid: &Grid, page: usize) -> [Button; KEYS] {
+    fn generate_key_page(grid: &Grid, page: usize) -> [Child<Button>; KEYS] {
         [
             Self::generate_key(grid, page, 0),
             Self::generate_key(grid, page, 1),
@@ -92,7 +98,7 @@ impl PassphraseKeyboard {
         ]
     }
 
-    fn generate_key(grid: &Grid, page: usize, key: usize) -> Button {
+    fn generate_key(grid: &Grid, page: usize, key: usize) -> Child<Button> {
         #[rustfmt::skip]
         const KEYBOARD: [[&str; KEYS]; PAGES] = [
             ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
@@ -114,7 +120,7 @@ impl PassphraseKeyboard {
         if text == b" " {
             todo!()
         } else {
-            Button::with_text(area, text, theme::button_default())
+            Child::new(Button::with_text(area, text, theme::button_default()))
         }
     }
 
@@ -127,10 +133,11 @@ impl PassphraseKeyboard {
         self.pending.take();
     }
 
-    fn on_backspace_click(&mut self) {
+    fn on_backspace_click(&mut self, ctx: &mut EventCtx) {
         self.pending.take();
-        self.textbox.delete_last();
-        self.after_edit();
+        self.textbox
+            .mutate(ctx, |ctx, textbox| textbox.delete_last(ctx));
+        self.after_edit(ctx);
     }
 
     fn on_key_click(&mut self, ctx: &mut EventCtx, key: usize) {
@@ -141,13 +148,15 @@ impl PassphraseKeyboard {
                 // This key is pending. Cycle the last inserted character through the
                 // key content.
                 let char = (pending.char + 1) % content.len();
-                self.textbox.replace_last(content[char]);
+                self.textbox
+                    .mutate(ctx, |ctx, textbox| textbox.replace_last(ctx, content[char]));
                 char
             }
             _ => {
                 // This key is not pending. Append the first character in the key.
                 let char = 0;
-                self.textbox.append(content[char]);
+                self.textbox
+                    .mutate(ctx, |ctx, textbox| textbox.append(ctx, content[char]));
                 char
             }
         };
@@ -164,9 +173,12 @@ impl PassphraseKeyboard {
         } else {
             None
         };
-        self.textbox.toggle_pending_marker(self.pending.is_some());
+        let is_pending = self.pending.is_some();
+        self.textbox.mutate(ctx, |ctx, textbox| {
+            textbox.toggle_pending_marker(ctx, is_pending);
+        });
 
-        self.after_edit();
+        self.after_edit(ctx);
     }
 
     fn on_timeout(&mut self) {
@@ -174,27 +186,23 @@ impl PassphraseKeyboard {
     }
 
     fn key_content(&self, page: usize, key: usize) -> &'static [u8] {
-        match self.key_btns[page][key].content() {
+        match self.key_btns[page][key].inner().content() {
             ButtonContent::Text(text) => text,
             ButtonContent::Image(_) => b" ",
         }
     }
 
-    fn after_edit(&mut self) {
-        if self.textbox.is_empty() {
-            self.back_btn.disable();
+    fn after_edit(&mut self, ctx: &mut EventCtx) {
+        if self.textbox.inner().is_empty() {
+            self.back_btn.mutate(ctx, |ctx, button| button.disable(ctx));
         } else {
-            self.back_btn.enable();
+            self.back_btn.mutate(ctx, |ctx, button| button.enable(ctx));
         }
     }
 }
 
 impl Component for PassphraseKeyboard {
     type Msg = PassphraseKeyboardMsg;
-
-    fn widget(&mut self) -> &mut Widget {
-        &mut self.widget
-    }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if matches!((event, &self.pending), (Event::Timer(t), Some(p)) if p.timer == t) {
@@ -214,10 +222,10 @@ impl Component for PassphraseKeyboard {
         if let Some(Clicked) = self.back_btn.event(ctx, event) {
             // Backspace button was clicked. If we have any content in the textbox, let's
             // delete the last character. Otherwise cancel.
-            if self.textbox.is_empty() {
+            if self.textbox.inner().is_empty() {
                 return Some(PassphraseKeyboardMsg::Cancelled);
             } else {
-                self.on_backspace_click();
+                self.on_backspace_click(ctx);
                 return None;
             }
         }
@@ -238,17 +246,17 @@ impl Component for PassphraseKeyboard {
     }
 
     fn paint(&mut self) {
-        self.textbox.paint_if_requested();
-        self.confirm_btn.paint_if_requested();
-        self.back_btn.paint_if_requested();
+        self.textbox.paint();
+        self.confirm_btn.paint();
+        self.back_btn.paint();
         for btn in &mut self.key_btns[self.key_page] {
-            btn.paint_if_requested();
+            btn.paint();
         }
     }
 }
 
 struct TextBox {
-    widget: Widget,
+    area: Rect,
     text: Vec<u8, MAX_LENGTH>,
     pending: bool,
 }
@@ -256,44 +264,44 @@ struct TextBox {
 impl TextBox {
     fn new(area: Rect, text: Vec<u8, MAX_LENGTH>) -> Self {
         Self {
-            widget: Widget::new(area),
+            area,
             text,
             pending: false,
         }
-    }
-
-    fn toggle_pending_marker(&mut self, pending: bool) {
-        self.pending = pending;
     }
 
     fn is_empty(&self) -> bool {
         self.text.is_empty()
     }
 
-    fn delete_last(&mut self) {
-        self.text.pop();
+    fn toggle_pending_marker(&mut self, ctx: &mut EventCtx, pending: bool) {
+        self.pending = pending;
+        ctx.request_paint();
     }
 
-    fn replace_last(&mut self, char: u8) {
+    fn delete_last(&mut self, ctx: &mut EventCtx) {
+        self.text.pop();
+        ctx.request_paint();
+    }
+
+    fn replace_last(&mut self, ctx: &mut EventCtx, char: u8) {
         self.text.pop();
         if self.text.push(char).is_err() {
             // Should not happen unless `self.text` has zero capacity.
         }
+        ctx.request_paint();
     }
 
-    fn append(&mut self, char: u8) {
+    fn append(&mut self, ctx: &mut EventCtx, char: u8) {
         if self.text.push(char).is_err() {
             // `self.text` is full, ignore this change.
         }
+        ctx.request_paint();
     }
 }
 
 impl Component for TextBox {
     type Msg = Never;
-
-    fn widget(&mut self) -> &mut Widget {
-        &mut self.widget
-    }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
@@ -303,7 +311,7 @@ impl Component for TextBox {
         let style = theme::label_default();
 
         display::text(
-            self.area().top_left(),
+            self.area.bottom_left(),
             &self.text,
             style.font,
             style.text_color,

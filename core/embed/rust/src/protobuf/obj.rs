@@ -63,7 +63,7 @@ impl MsgObj {
             return Ok(obj);
         }
 
-        // Built-in attribute
+        // Built-in attribute.
         match attr {
             Qstr::MP_QSTR_MESSAGE_WIRE_TYPE => {
                 // Return the wire ID of this message def, or None if not set.
@@ -85,7 +85,7 @@ impl MsgObj {
 
     fn setattr(&mut self, attr: Qstr, value: Obj) -> Result<(), Error> {
         if value.is_null() {
-            // this would be a delattr
+            // Null value means a delattr operation, reject.
             return Err(Error::TypeError);
         }
 

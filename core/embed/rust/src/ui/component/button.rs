@@ -3,14 +3,14 @@ use crate::ui::{
     math::{Color, Offset, Rect},
 };
 
-use super::component::{Component, Event, EventCtx, Widget};
+use super::component::{Component, Event, EventCtx};
 
 pub enum ButtonMsg {
     Clicked,
 }
 
 pub struct Button {
-    widget: Widget,
+    area: Rect,
     content: ButtonContent,
     styles: ButtonStyleSheet,
     state: State,
@@ -19,7 +19,7 @@ pub struct Button {
 impl Button {
     pub fn new(area: Rect, content: ButtonContent, styles: ButtonStyleSheet) -> Self {
         Self {
-            widget: Widget::new(area),
+            area,
             content,
             styles,
             state: State::Initial,
@@ -34,12 +34,19 @@ impl Button {
         Self::new(area, ButtonContent::Image(image), styles)
     }
 
-    pub fn enable(&mut self) {
-        self.set(State::Initial);
+    pub fn enable(&mut self, ctx: &mut EventCtx) {
+        self.set(ctx, State::Initial)
     }
 
-    pub fn disable(&mut self) {
-        self.set(State::Disabled);
+    pub fn disable(&mut self, ctx: &mut EventCtx) {
+        self.set(ctx, State::Disabled)
+    }
+
+    pub fn is_enabled(&self) -> bool {
+        matches!(
+            self.state,
+            State::Initial | State::Pressed | State::Released
+        )
     }
 
     pub fn is_disabled(&self) -> bool {
@@ -58,10 +65,10 @@ impl Button {
         }
     }
 
-    fn set(&mut self, state: State) {
+    fn set(&mut self, ctx: &mut EventCtx, state: State) {
         if self.state != state {
             self.state = state;
-            self.request_paint();
+            ctx.request_paint();
         }
     }
 }
@@ -69,11 +76,7 @@ impl Button {
 impl Component for Button {
     type Msg = ButtonMsg;
 
-    fn widget(&mut self) -> &mut Widget {
-        &mut self.widget
-    }
-
-    fn event(&mut self, _ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match event {
             Event::TouchStart(pos) => {
                 match self.state {
@@ -82,22 +85,21 @@ impl Component for Button {
                     }
                     _ => {
                         // Touch started in our area, transform to `Pressed` state.
-                        if self.area().contains(pos) {
-                            self.set(State::Pressed);
+                        if self.area.contains(pos) {
+                            self.set(ctx, State::Pressed);
                         }
                     }
                 }
             }
             Event::TouchMove(pos) => {
-                let area = self.area();
                 match self.state {
-                    State::Released if area.contains(pos) => {
+                    State::Released if self.area.contains(pos) => {
                         // Touch entered our area, transform to `Pressed` state.
-                        self.set(State::Pressed);
+                        self.set(ctx, State::Pressed);
                     }
-                    State::Pressed if !area.contains(pos) => {
+                    State::Pressed if !self.area.contains(pos) => {
                         // Touch is leaving our area, transform to `Released` state.
-                        self.set(State::Released);
+                        self.set(ctx, State::Released);
                     }
                     _ => {
                         // Do nothing.
@@ -105,19 +107,19 @@ impl Component for Button {
                 }
             }
             Event::TouchEnd(pos) => {
-                let area = self.area();
                 match self.state {
                     State::Initial | State::Disabled => {
                         // Do nothing.
                     }
-                    State::Pressed if area.contains(pos) => {
+                    State::Pressed if self.area.contains(pos) => {
                         // Touch finished in our area, we got clicked.
-                        self.set(State::Initial);
+                        self.set(ctx, State::Initial);
+
                         return Some(ButtonMsg::Clicked);
                     }
                     _ => {
                         // Touch finished outside our area.
-                        self.set(State::Initial);
+                        self.set(ctx, State::Initial);
                     }
                 }
             }
@@ -127,19 +129,18 @@ impl Component for Button {
     }
 
     fn paint(&mut self) {
-        let area = self.area();
         let style = self.style();
 
         if style.border_width > 0 {
             // Paint the border and a smaller background on top of it.
             display::rounded_rect(
-                area,
+                self.area,
                 style.border_color,
                 style.background_color,
                 style.border_radius,
             );
             display::rounded_rect(
-                area.inset(style.border_width),
+                self.area.inset(style.border_width),
                 style.button_color,
                 style.border_color,
                 style.border_radius,
@@ -148,7 +149,7 @@ impl Component for Button {
             // We do not need to draw an explicit border in this case, just a
             // bigger background.
             display::rounded_rect(
-                area,
+                self.area,
                 style.button_color,
                 style.background_color,
                 style.border_radius,
@@ -159,7 +160,7 @@ impl Component for Button {
             ButtonContent::Text(text) => {
                 let width = display::text_width(text, style.font);
                 let height = display::text_height();
-                let start_of_baseline = area.midpoint() + Offset::new(-width / 2, height / 2);
+                let start_of_baseline = self.area.center() + Offset::new(-width / 2, height / 2);
                 display::text(
                     start_of_baseline,
                     text,

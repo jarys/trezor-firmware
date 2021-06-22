@@ -2,7 +2,7 @@ use crate::ui::math::{Grid, Rect};
 
 use super::{
     button::{Button, ButtonMsg::Clicked},
-    component::{Component, Event, EventCtx, Widget},
+    component::{Child, Component, Event, EventCtx},
 };
 
 pub enum ConfirmMsg<T: Component> {
@@ -12,45 +12,35 @@ pub enum ConfirmMsg<T: Component> {
 }
 
 pub struct Confirm<T> {
-    widget: Widget,
-    content: T,
-    left_btn: Option<Button>,
-    right_btn: Option<Button>,
+    content: Child<T>,
+    left_btn: Option<Child<Button>>,
+    right_btn: Option<Child<Button>>,
 }
 
-impl<T> Confirm<T> {
+impl<T: Component> Confirm<T> {
     pub fn new(
         area: Rect,
         content: impl FnOnce(Rect) -> T,
-        left: Option<impl FnOnce(Rect) -> Button>,
-        right: Option<impl FnOnce(Rect) -> Button>,
+        left: impl FnOnce(Rect) -> Button,
+        right: impl FnOnce(Rect) -> Button,
     ) -> Self {
-        let grid = if left.is_some() && right.is_some() {
-            Grid::new(area, 5, 2)
-        } else {
-            Grid::new(area, 5, 1)
-        };
-        let content = content(Rect::new(
+        let grid = Grid::new(area, 5, 2);
+        let content = Child::new(content(Rect::new(
             grid.row_col(0, 0).top_left(),
             grid.row_col(4, 1).bottom_right(),
-        ));
-        let left_btn = left.map(|left| left(grid.row_col(4, 0)));
-        let right_btn = right.map(|right| right(grid.row_col(4, 1)));
+        )));
+        let left_btn = Child::new(left(grid.row_col(4, 0)));
+        let right_btn = Child::new(right(grid.row_col(4, 1)));
         Self {
-            widget: Widget::new(grid.area),
             content,
-            left_btn,
-            right_btn,
+            left_btn: Some(left_btn),
+            right_btn: Some(right_btn),
         }
     }
 }
 
 impl<T: Component> Component for Confirm<T> {
     type Msg = ConfirmMsg<T>;
-
-    fn widget(&mut self) -> &mut Widget {
-        &mut self.widget
-    }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some(msg) = self.content.event(ctx, event) {
@@ -65,8 +55,8 @@ impl<T: Component> Component for Confirm<T> {
     }
 
     fn paint(&mut self) {
-        self.content.paint_if_requested();
-        self.left_btn.as_mut().map(|b| b.paint_if_requested());
-        self.right_btn.as_mut().map(|b| b.paint_if_requested());
+        self.content.paint();
+        self.left_btn.as_mut().map(|b| b.paint());
+        self.right_btn.as_mut().map(|b| b.paint());
     }
 }

@@ -9,7 +9,7 @@ use crate::ui::{
 
 use super::{
     button::{Button, ButtonContent, ButtonMsg::Clicked},
-    component::{Component, Event, EventCtx, Never, Widget},
+    component::{Child, Component, Event, EventCtx, Never},
     label::{Label, LabelStyle},
 };
 
@@ -19,15 +19,14 @@ pub enum PinDialogMsg {
 }
 
 pub struct PinDialog {
-    widget: Widget,
     digits: Vec<u8, MAX_LENGTH>,
     major_prompt: Label<&'static [u8]>,
     minor_prompt: Label<&'static [u8]>,
-    dots: PinDots,
-    reset_btn: Button,
-    cancel_btn: Button,
-    confirm_btn: Button,
-    digit_btns: [Button; DIGIT_COUNT],
+    dots: Child<PinDots>,
+    reset_btn: Child<Button>,
+    cancel_btn: Child<Button>,
+    confirm_btn: Child<Button>,
+    digit_btns: [Child<Button>; DIGIT_COUNT],
 }
 
 const MAX_LENGTH: usize = 9;
@@ -37,28 +36,51 @@ impl PinDialog {
     pub fn new(area: Rect, major_prompt: &'static [u8], minor_prompt: &'static [u8]) -> Self {
         let digits = Vec::new();
 
+        // Prompts and PIN dots display.
         let grid = if minor_prompt.is_empty() {
             // Make the major prompt bigger if the minor one is empty.
             Grid::new(area, 5, 1)
         } else {
             Grid::new(area, 6, 1)
         };
-        let major_center = grid.row_col(0, 0).midpoint();
-        let minor_center = grid.row_col(0, 1).midpoint();
-        let major_prompt = Label::centered(major_center, major_prompt, theme::label_default());
-        let minor_prompt = Label::centered(minor_center, minor_prompt, theme::label_default());
-        let dots = PinDots::new(major_center, digits.len(), theme::label_default());
+        let major_prompt = Label::centered(
+            grid.row_col(0, 0).center(),
+            major_prompt,
+            theme::label_default(),
+        );
+        let minor_prompt = Label::centered(
+            grid.row_col(0, 1).center(),
+            minor_prompt,
+            theme::label_default(),
+        );
+        let dots = Child::new(PinDots::new(
+            grid.row_col(0, 0),
+            digits.len(),
+            theme::label_default(),
+        ));
 
+        // Control buttons.
         let grid = Grid::new(area, 5, 3);
-        let reset_content = b"Reset";
-        let cancel_content = b"Cancel";
-        let confirm_content = b"Confirm";
-        let reset_btn = Button::with_text(grid.cell(12), reset_content, theme::button_clear());
-        let cancel_btn = Button::with_text(grid.cell(12), cancel_content, theme::button_cancel());
-        let confirm_btn = Button::with_text(grid.cell(14), confirm_content, theme::button_clear());
+        let reset_btn = Child::new(Button::with_text(
+            grid.cell(12),
+            b"Reset",
+            theme::button_clear(),
+        ));
+        let cancel_btn = Child::new(Button::with_text(
+            grid.cell(12),
+            b"Cancel",
+            theme::button_cancel(),
+        ));
+        let confirm_btn = Child::new(Button::with_text(
+            grid.cell(14),
+            b"Confirm",
+            theme::button_clear(),
+        ));
+
+        // PIN digit buttons.
+        let digit_btns = Self::generate_digit_buttons(&grid);
 
         Self {
-            widget: Widget::new(area),
             digits,
             major_prompt,
             minor_prompt,
@@ -66,11 +88,11 @@ impl PinDialog {
             reset_btn,
             cancel_btn,
             confirm_btn,
-            digit_btns: Self::generate_digit_buttons(&grid),
+            digit_btns,
         }
     }
 
-    fn generate_digit_buttons(grid: &Grid) -> [Button; DIGIT_COUNT] {
+    fn generate_digit_buttons(grid: &Grid) -> [Child<Button>; DIGIT_COUNT] {
         // Generate a random sequence of digits from 0 to 9.
         let mut digits = [b"0", b"1", b"2", b"3", b"4", b"5", b"6", b"7", b"8", b"9"];
         random::shuffle(&mut digits);
@@ -85,7 +107,7 @@ impl PinDialog {
                 i + 1 + 3
             });
             let text: &[u8; 1] = digits[i];
-            Button::with_text(area, text, theme::button_default())
+            Child::new(Button::with_text(area, text, theme::button_default()))
         };
         [
             btn(0),
@@ -101,24 +123,29 @@ impl PinDialog {
         ]
     }
 
-    fn pin_modified(&mut self) {
+    fn pin_modified(&mut self, ctx: &mut EventCtx) {
         for btn in &mut self.digit_btns {
-            if self.digits.is_full() {
-                btn.disable();
-            } else {
-                btn.enable();
-            }
+            let is_full = self.digits.is_full();
+            btn.mutate(ctx, |ctx, btn| {
+                if is_full {
+                    btn.disable(ctx);
+                } else {
+                    btn.enable(ctx);
+                }
+            });
         }
         if self.digits.is_empty() {
-            self.reset_btn.disable();
-            self.cancel_btn.disable();
-            self.confirm_btn.disable();
+            self.reset_btn.mutate(ctx, |ctx, btn| btn.disable(ctx));
+            self.cancel_btn.mutate(ctx, |ctx, btn| btn.disable(ctx));
+            self.confirm_btn.mutate(ctx, |ctx, btn| btn.disable(ctx));
         } else {
-            self.reset_btn.enable();
-            self.cancel_btn.enable();
-            self.confirm_btn.enable();
+            self.reset_btn.mutate(ctx, |ctx, btn| btn.enable(ctx));
+            self.cancel_btn.mutate(ctx, |ctx, btn| btn.enable(ctx));
+            self.confirm_btn.mutate(ctx, |ctx, btn| btn.enable(ctx));
         }
-        self.dots.update(self.digits.len());
+        let digit_count = self.digits.len();
+        self.dots
+            .mutate(ctx, |ctx, dots| dots.update(ctx, digit_count));
     }
 
     pub fn pin(&self) -> &[u8] {
@@ -129,10 +156,6 @@ impl PinDialog {
 impl Component for PinDialog {
     type Msg = PinDialogMsg;
 
-    fn widget(&mut self) -> &mut Widget {
-        &mut self.widget
-    }
-
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some(Clicked) = self.confirm_btn.event(ctx, event) {
             return Some(PinDialogMsg::Confirmed);
@@ -142,17 +165,17 @@ impl Component for PinDialog {
         }
         if let Some(Clicked) = self.reset_btn.event(ctx, event) {
             self.digits.clear();
-            self.pin_modified();
+            self.pin_modified(ctx);
             return None;
         }
         for btn in &mut self.digit_btns {
             if let Some(Clicked) = btn.event(ctx, event) {
-                if let ButtonContent::Text(text) = btn.content() {
+                if let ButtonContent::Text(text) = btn.inner().content() {
                     if self.digits.extend_from_slice(text).is_err() {
                         // `self.pin` is full and wasn't able to accept all of
                         // `text`. Should not happen.
                     }
-                    self.pin_modified();
+                    self.pin_modified(ctx);
                     return None;
                 }
             }
@@ -161,22 +184,22 @@ impl Component for PinDialog {
     }
 
     fn paint(&mut self) {
-        self.major_prompt.paint_if_requested();
-        self.minor_prompt.paint_if_requested();
+        self.major_prompt.paint();
+        self.minor_prompt.paint();
         if self.digits.is_empty() {
-            self.cancel_btn.paint_if_requested();
+            self.cancel_btn.paint();
         } else {
-            self.reset_btn.paint_if_requested();
+            self.reset_btn.paint();
         }
-        self.confirm_btn.paint_if_requested();
+        self.confirm_btn.paint();
         for btn in &mut self.digit_btns {
-            btn.paint_if_requested();
+            btn.paint();
         }
     }
 }
 
 struct PinDots {
-    widget: Widget,
+    area: Rect,
     style: LabelStyle,
     digit_count: usize,
 }
@@ -185,24 +208,18 @@ impl PinDots {
     const DOT: i32 = 10;
     const PADDING: i32 = 4;
 
-    fn new(center: Point, digit_count: usize, style: LabelStyle) -> Self {
+    fn new(area: Rect, digit_count: usize, style: LabelStyle) -> Self {
         Self {
-            widget: Widget::new(Self::layout(center, digit_count)),
+            area,
             style,
             digit_count,
         }
     }
 
-    fn layout(_center: Point, _digit_count: usize) -> Rect {
-        todo!()
-    }
-
-    fn update(&mut self, digit_count: usize) {
+    fn update(&mut self, ctx: &mut EventCtx, digit_count: usize) {
         if digit_count != self.digit_count {
             self.digit_count = digit_count;
-            let area = Self::layout(self.area().midpoint(), digit_count);
-            self.set_area(area);
-            self.request_paint();
+            ctx.request_paint();
         }
     }
 }
@@ -210,29 +227,23 @@ impl PinDots {
 impl Component for PinDots {
     type Msg = Never;
 
-    fn widget(&mut self) -> &mut Widget {
-        &mut self.widget
-    }
-
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
     }
 
     fn paint(&mut self) {
-        let area = self.area();
-
         // Clear the area with the background color.
-        display::rect(area, self.style.background_color);
+        display::rect(self.area, self.style.background_color);
 
         // Draw a dot for each PIN digit.
         for i in 0..self.digit_count {
             let pos = Point {
-                x: area.x0 + i as i32 * (Self::DOT + Self::PADDING),
-                y: area.midpoint().y,
+                x: self.area.x0 + i as i32 * (Self::DOT + Self::PADDING),
+                y: self.area.center().y,
             };
             let size = Offset::new(Self::DOT, Self::DOT);
             display::rounded_rect(
-                Rect::with_size(pos, size),
+                Rect::from_top_left_and_size(pos, size),
                 self.style.text_color,
                 self.style.background_color,
                 4,

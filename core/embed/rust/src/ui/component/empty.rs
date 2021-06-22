@@ -1,25 +1,9 @@
-use crate::ui::math::{Offset, Point, Rect};
+use super::component::{Component, Event, EventCtx, Never};
 
-use super::component::{Component, Event, EventCtx, Never, Widget};
-
-pub struct Empty {
-    widget: Widget,
-}
-
-impl Empty {
-    pub fn new() -> Self {
-        Self {
-            widget: Widget::new(Rect::with_size(Point::zero(), Offset::zero())),
-        }
-    }
-}
+pub struct Empty;
 
 impl Component for Empty {
     type Msg = Never;
-
-    fn widget(&mut self) -> &mut Widget {
-        &mut self.widget
-    }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None

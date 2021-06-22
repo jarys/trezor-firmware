@@ -5,10 +5,10 @@ use crate::ui::{
     math::{Align, Color, Point, Rect},
 };
 
-use super::component::{Component, Event, EventCtx, Never, Widget};
+use super::component::{Component, Event, EventCtx, Never};
 
 pub struct Label<T> {
-    widget: Widget,
+    area: Rect,
     style: LabelStyle,
     text: T,
 }
@@ -40,11 +40,7 @@ impl<T: Deref<Target = [u8]>> Label<T> {
                 y1: origin.y + height,
             },
         };
-        Self {
-            widget: Widget::new(area),
-            text,
-            style,
-        }
+        Self { area, text, style }
     }
 
     pub fn left_aligned(origin: Point, text: T, style: LabelStyle) -> Self {
@@ -73,17 +69,13 @@ pub struct LabelStyle {
 impl<T: Deref<Target = [u8]>> Component for Label<T> {
     type Msg = Never;
 
-    fn widget(&mut self) -> &mut Widget {
-        &mut self.widget
-    }
-
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
     }
 
     fn paint(&mut self) {
         display::text(
-            self.area().bottom_left(),
+            self.area.bottom_left(),
             &self.text,
             self.style.font,
             self.style.text_color,

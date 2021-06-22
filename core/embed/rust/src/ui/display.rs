@@ -15,7 +15,7 @@ pub fn size() -> Offset {
 }
 
 pub fn screen() -> Rect {
-    Rect::with_size(Point::zero(), size())
+    Rect::from_top_left_and_size(Point::zero(), size())
 }
 
 pub fn backlight(val: i32) -> i32 {

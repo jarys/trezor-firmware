@@ -29,7 +29,7 @@ pub const GREY_LIGHT: Color = Color::rgb(168, 168, 168); // greyish
 pub const GREY_DARK: Color = Color::rgb(51, 51, 51); // black
 
 // Commonly used corner radius (i.e. for buttons).
-const RADIUS: u8 = 4;
+pub const RADIUS: u8 = 4;
 
 pub fn label_default() -> LabelStyle {
     LabelStyle {

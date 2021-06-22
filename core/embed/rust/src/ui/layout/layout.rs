@@ -14,7 +14,7 @@ use crate::{
         typ::Type,
     },
     ui::{
-        component::{Component, Event, EventCtx, TimerToken},
+        component::{Child, Component, Event, EventCtx, TimerToken},
         math::Point,
     },
     util,
@@ -27,10 +27,10 @@ use crate::{
 /// can be converted to `Obj`.
 pub trait ObjComponent {
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Obj;
-    fn obj_paint_if_requested(&mut self);
+    fn obj_paint(&mut self);
 }
 
-impl<T> ObjComponent for T
+impl<T> ObjComponent for Child<T>
 where
     T: Component,
     T::Msg: Into<Obj>,
@@ -40,8 +40,8 @@ where
             .map_or_else(Obj::const_none, Into::into)
     }
 
-    fn obj_paint_if_requested(&mut self) {
-        self.paint_if_requested();
+    fn obj_paint(&mut self) {
+        self.paint();
     }
 }
 
@@ -90,6 +90,10 @@ impl LayoutObj {
         // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
         let msg = unsafe { Gc::as_mut(&mut inner.root) }.obj_event(&mut inner.event_ctx, event);
 
+        // Clear the upwards-propagating paint request flag, all concerning `Child`
+        // wrappers should have already marked themselves for painting.
+        inner.event_ctx.clear_paint_requests();
+
         // Drain any pending timers into the callback.
         while let Some((token, deadline)) = inner.event_ctx.pop_timer() {
             let token = token.try_into();
@@ -111,7 +115,7 @@ impl LayoutObj {
     fn obj_paint_if_requested(&self) {
         let mut inner = self.inner.borrow_mut();
         // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-        unsafe { Gc::as_mut(&mut inner.root) }.obj_paint_if_requested();
+        unsafe { Gc::as_mut(&mut inner.root) }.obj_paint();
     }
 
     fn obj_type() -> &'static Type {

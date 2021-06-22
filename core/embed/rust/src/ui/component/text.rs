@@ -10,10 +10,9 @@ use crate::ui::{
     theme,
 };
 
-use super::{component::Widget, Component, Event, EventCtx, Never};
+use super::{Component, Event, EventCtx, Never};
 
 pub struct Text<'arg> {
-    widget: Widget,
     layout: TextLayout,
     format: &'static str,
     args: LinearMap<&'static [u8], &'arg [u8], { Text::MAX_ARGUMENTS }>,
@@ -24,7 +23,6 @@ impl<'arg> Text<'arg> {
 
     pub fn new(area: Rect) -> Self {
         Self {
-            widget: Widget::new(area),
             layout: TextLayout::new(area),
             format: "",
             args: LinearMap::new(),
@@ -70,10 +68,6 @@ impl<'arg> Text<'arg> {
 
 impl<'arg> Component for Text<'arg> {
     type Msg = Never;
-
-    fn widget(&mut self) -> &mut Widget {
-        &mut self.widget
-    }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
@@ -155,7 +149,7 @@ impl TextLayout {
         }
     }
 
-    pub fn render_formatted<'op, F, I>(self, format: &'static str, resolve: F) -> LayoutResult
+    pub fn render_formatted<'op, F, I>(self, format: &'static str, resolve: F) -> LayoutFit
     where
         F: Fn(Token<'static>) -> I,
         I: IntoIterator<Item = Op<'op>>,
@@ -181,7 +175,7 @@ impl TextLayout {
         ops: &mut dyn Iterator<Item = Op<'op>>,
         cursor: &mut Point,
         sink: &mut dyn LayoutSink,
-    ) -> LayoutResult {
+    ) -> LayoutFit {
         let mut total_processed_chars = 0;
 
         for op in ops {
@@ -193,13 +187,13 @@ impl TextLayout {
                     self.text_font = font;
                 }
                 Op::Text(text) => match self.layout_text(text, cursor, sink) {
-                    LayoutResult::Fitting { processed_chars } => {
+                    LayoutFit::Fitting { processed_chars } => {
                         total_processed_chars += processed_chars;
                     }
-                    LayoutResult::OutOfBounds { processed_chars } => {
+                    LayoutFit::OutOfBounds { processed_chars } => {
                         total_processed_chars += processed_chars;
 
-                        return LayoutResult::OutOfBounds {
+                        return LayoutFit::OutOfBounds {
                             processed_chars: total_processed_chars,
                         };
                     }
@@ -207,7 +201,7 @@ impl TextLayout {
             }
         }
 
-        LayoutResult::Fitting {
+        LayoutFit::Fitting {
             processed_chars: total_processed_chars,
         }
     }
@@ -217,7 +211,7 @@ impl TextLayout {
         text: &[u8],
         cursor: &mut Point,
         sink: &mut dyn LayoutSink,
-    ) -> LayoutResult {
+    ) -> LayoutFit {
         let mut remaining_text = text;
 
         while !remaining_text.is_empty() {
@@ -264,7 +258,7 @@ impl TextLayout {
                     // Report we are out of bounds and quit.
                     sink.out_of_bounds();
 
-                    return LayoutResult::OutOfBounds {
+                    return LayoutFit::OutOfBounds {
                         processed_chars: text.len() - remaining_text.len(),
                     };
                 } else {
@@ -275,13 +269,18 @@ impl TextLayout {
             }
         }
 
-        LayoutResult::Fitting {
+        LayoutFit::Fitting {
             processed_chars: text.len(),
         }
     }
 }
 
-pub enum LayoutResult {
+pub struct LayoutMeasurement {
+    processed_chars: usize,
+    height: i32,
+}
+
+pub enum LayoutFit {
     Fitting { processed_chars: usize },
     OutOfBounds { processed_chars: usize },
 }
@@ -417,6 +416,28 @@ pub enum Op<'a> {
     Color(Color),
     /// Set currently used font.
     Font(Font),
+}
+
+impl<'a> Op<'a> {
+    fn skip_n_text_bytes(
+        ops: impl Iterator<Item = Op<'a>>,
+        skip_bytes: usize,
+    ) -> impl Iterator<Item = Op<'a>> {
+        let mut skipped = 0;
+
+        ops.filter_map(move |op| match op {
+            Op::Text(text) if skipped < skip_bytes => {
+                skipped = skipped.saturating_add(text.len());
+                if skipped > skip_bytes {
+                    let leave_bytes = skipped - skip_bytes;
+                    Some(Op::Text(&text[..text.len() - leave_bytes]))
+                } else {
+                    None
+                }
+            }
+            op_to_pass_through => Some(op_to_pass_through),
+        })
+    }
 }
 
 struct Span {

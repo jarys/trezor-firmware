@@ -1,48 +1,68 @@
+use core::mem;
 use core::time::Duration;
 
 use heapless::Vec;
 
-use crate::ui::math::{Point, Rect};
+use crate::ui::math::Point;
 
+/// Type used by components that do not return any messages.
+///
+/// Alternative to the yet-unstable `!`-type.
 pub enum Never {}
 
 pub trait Component {
     type Msg;
-
-    fn widget(&mut self) -> &mut Widget;
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg>;
     fn paint(&mut self);
+}
 
-    fn area(&mut self) -> Rect {
-        self.widget().area
-    }
+pub struct Child<T> {
+    component: T,
+    marked_for_paint: bool,
+}
 
-    fn set_area(&mut self, area: Rect) {
-        self.widget().area = area;
-    }
-
-    fn request_paint(&mut self) {
-        self.widget().paint_requested = true;
-    }
-
-    fn paint_if_requested(&mut self) {
-        if self.widget().paint_requested {
-            self.widget().paint_requested = false;
-            self.paint();
+impl<T> Child<T> {
+    pub fn new(component: T) -> Self {
+        Self {
+            component,
+            marked_for_paint: true,
         }
     }
+
+    pub fn inner(&self) -> &T {
+        &self.component
+    }
+
+    pub fn into_inner(self) -> T {
+        self.component
+    }
+
+    pub fn mutate<F, U>(&mut self, ctx: &mut EventCtx, component_func: F) -> U
+    where
+        F: FnOnce(&mut EventCtx, &mut T) -> U,
+    {
+        let paint_was_previously_requested = mem::replace(&mut ctx.paint_requested, false);
+        let component_result = component_func(ctx, &mut self.component);
+        if ctx.paint_requested {
+            self.marked_for_paint = true;
+        } else {
+            ctx.paint_requested = paint_was_previously_requested;
+        }
+        component_result
+    }
 }
 
-pub struct Widget {
-    area: Rect,
-    paint_requested: bool,
-}
+impl<T: Component> Component for Child<T> {
+    type Msg = T::Msg;
 
-impl Widget {
-    pub fn new(area: Rect) -> Self {
-        Self {
-            area,
-            paint_requested: true,
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.mutate(ctx, |ctx, c| c.event(ctx, event))
+    }
+
+    fn paint(&mut self) {
+        if self.marked_for_paint {
+            self.marked_for_paint = false;
+            self.component.paint();
         }
     }
 }
@@ -74,6 +94,7 @@ impl TimerToken {
 pub struct EventCtx {
     timers: Vec<(TimerToken, Duration), { Self::MAX_TIMERS }>,
     next_token: usize,
+    paint_requested: bool,
 }
 
 impl EventCtx {
@@ -84,7 +105,16 @@ impl EventCtx {
         Self {
             timers: Vec::new(),
             next_token: 1,
+            paint_requested: false,
         }
+    }
+
+    pub fn request_paint(&mut self) {
+        self.paint_requested = true;
+    }
+
+    pub fn clear_paint_requests(&mut self) {
+        self.paint_requested = false;
     }
 
     pub fn request_timer(&mut self, deadline: Duration) -> TimerToken {
@@ -95,13 +125,13 @@ impl EventCtx {
         token
     }
 
+    pub fn pop_timer(&mut self) -> Option<(TimerToken, Duration)> {
+        self.timers.pop()
+    }
+
     fn next_timer_token(&mut self) -> TimerToken {
         let token = TimerToken(self.next_token);
         self.next_token += 1;
         token
-    }
-
-    pub fn pop_timer(&mut self) -> Option<(TimerToken, Duration)> {
-        self.timers.pop()
     }
 }
