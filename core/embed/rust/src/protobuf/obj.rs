@@ -70,8 +70,10 @@ impl MsgObj {
                 Ok(self.msg_wire_id.map_or_else(Obj::const_none, Into::into))
             }
             Qstr::MP_QSTR_MESSAGE_NAME => {
-                // Return the qstr name of this message def
-                Ok(Qstr::from_u16(find_name_by_msg_offset(self.msg_offset)?).into())
+                // Return the QSTR name of this message def.
+                let name =
+                    Qstr::from_u16(find_name_by_msg_offset(self.msg_offset).ok_or(Error::Missing)?);
+                Ok(name.into())
             }
             Qstr::MP_QSTR___dict__ => {
                 // Conversion to dict. Allocate a new dict object with a copy of our map
@@ -219,10 +221,7 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
             }
             Qstr::MP_QSTR_MESSAGE_WIRE_TYPE => {
                 // Return the wire type of this message def.
-                let wire_id_obj = this
-                    .def
-                    .wire_id
-                    .map_or_else(Obj::const_none, |wire_id| wire_id.into());
+                let wire_id_obj = this.def.wire_id.map_or_else(Obj::const_none, Into::into);
                 unsafe {
                     dest.write(wire_id_obj);
                 };

@@ -1,25 +1,23 @@
-use core::convert::TryInto;
-
 use crate::{
     micropython::obj::Obj,
     ui::{
-        component::{Button, Child, Component, Confirm, ConfirmMsg, Never, Text},
+        component::{Button, Child, Component, Dialog, DialogMsg, Never, Text},
         display, theme,
     },
 };
 
-use super::layout::LayoutObj;
+use super::obj::LayoutObj;
 
-impl<T> Into<Obj> for ConfirmMsg<T>
+impl<T> From<DialogMsg<T>> for Obj
 where
     T: Component,
     T::Msg: Into<Obj>,
 {
-    fn into(self) -> Obj {
-        match self {
-            ConfirmMsg::Content(c) => c.into(),
-            ConfirmMsg::LeftClicked => 1.try_into().unwrap(),
-            ConfirmMsg::RightClicked => 2.try_into().unwrap(),
+    fn from(val: DialogMsg<T>) -> Self {
+        match val {
+            DialogMsg::Content(c) => c.into(),
+            DialogMsg::LeftClicked => 1.into(),
+            DialogMsg::RightClicked => 2.into(),
         }
     }
 }
@@ -32,7 +30,7 @@ impl From<Never> for Obj {
 
 #[no_mangle]
 extern "C" fn ui_layout_new_example() -> Obj {
-    LayoutObj::new(Child::new(Confirm::new(
+    LayoutObj::new(Child::new(Dialog::new(
         display::screen(),
         |area| {
             Text::new(area)

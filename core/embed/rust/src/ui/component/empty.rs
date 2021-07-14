@@ -1,4 +1,4 @@
-use super::component::{Component, Event, EventCtx, Never};
+use super::base::{Component, Event, EventCtx, Never};
 
 pub struct Empty;
 

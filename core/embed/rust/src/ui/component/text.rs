@@ -224,7 +224,7 @@ impl TextLayout {
             );
 
             // Report the span at the cursor position.
-            sink.text(&cursor, &self, &remaining_text[..span.length]);
+            sink.text(*cursor, &self, &remaining_text[..span.length]);
 
             // Continue with the rest of the remaining_text.
             remaining_text = &remaining_text[span.length + span.skip_next_chars..];
@@ -237,7 +237,7 @@ impl TextLayout {
 
                 // Check if we should be appending a hyphen at this point.
                 if span.insert_hyphen_before_line_break {
-                    sink.hyphen(&cursor, &self);
+                    sink.hyphen(*cursor, &self);
                 }
                 // Check the amount of vertical space we have left.
                 if cursor.y + span.advance.y > self.bounds.y1 {
@@ -248,7 +248,7 @@ impl TextLayout {
                             matches!(self.page_breaking, PageBreaking::CutAndInsertEllipsis)
                                 && !span.insert_hyphen_before_line_break;
                         if should_append_ellipsis {
-                            sink.ellipsis(&cursor, &self);
+                            sink.ellipsis(*cursor, &self);
                         }
                         // TODO: This does not work in case we are the last
                         // fitting text token on the line, with more text tokens
@@ -287,9 +287,9 @@ pub enum LayoutFit {
 
 /// Visitor for text segment operations.
 pub trait LayoutSink {
-    fn text(&mut self, _cursor: &Point, _layout: &TextLayout, _text: &[u8]) {}
-    fn hyphen(&mut self, _cursor: &Point, _layout: &TextLayout) {}
-    fn ellipsis(&mut self, _cursor: &Point, _layout: &TextLayout) {}
+    fn text(&mut self, _cursor: Point, _layout: &TextLayout, _text: &[u8]) {}
+    fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {}
+    fn ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {}
     fn out_of_bounds(&mut self) {}
 }
 
@@ -300,9 +300,9 @@ impl LayoutSink for TextNoop {}
 pub struct TextRenderer;
 
 impl LayoutSink for TextRenderer {
-    fn text(&mut self, cursor: &Point, layout: &TextLayout, text: &[u8]) {
+    fn text(&mut self, cursor: Point, layout: &TextLayout, text: &[u8]) {
         display::text(
-            *cursor,
+            cursor,
             text,
             layout.text_font,
             layout.text_color,
@@ -310,9 +310,9 @@ impl LayoutSink for TextRenderer {
         );
     }
 
-    fn hyphen(&mut self, cursor: &Point, layout: &TextLayout) {
+    fn hyphen(&mut self, cursor: Point, layout: &TextLayout) {
         display::text(
-            *cursor,
+            cursor,
             b"-",
             layout.hyphen_font,
             layout.hyphen_color,
@@ -320,9 +320,9 @@ impl LayoutSink for TextRenderer {
         );
     }
 
-    fn ellipsis(&mut self, cursor: &Point, layout: &TextLayout) {
+    fn ellipsis(&mut self, cursor: Point, layout: &TextLayout) {
         display::text(
-            *cursor,
+            cursor,
             b"...",
             layout.ellipsis_font,
             layout.ellipsis_color,
@@ -487,9 +487,7 @@ impl Span {
         let mut span_width = 0;
         let mut found_any_whitespace = false;
 
-        for i in 0..text.len() {
-            let ch = text[i];
-
+        for (i, &ch) in text.iter().enumerate() {
             let char_width = text_font.text_width(&[ch]);
 
             // Consider if we could be breaking the line at this position.

@@ -1,23 +1,23 @@
 use crate::ui::math::{Grid, Rect};
 
 use super::{
+    base::{Child, Component, Event, EventCtx},
     button::{Button, ButtonMsg::Clicked},
-    component::{Child, Component, Event, EventCtx},
 };
 
-pub enum ConfirmMsg<T: Component> {
+pub enum DialogMsg<T: Component> {
     Content(T::Msg),
     LeftClicked,
     RightClicked,
 }
 
-pub struct Confirm<T> {
+pub struct Dialog<T> {
     content: Child<T>,
     left_btn: Option<Child<Button>>,
     right_btn: Option<Child<Button>>,
 }
 
-impl<T: Component> Confirm<T> {
+impl<T: Component> Dialog<T> {
     pub fn new(
         area: Rect,
         content: impl FnOnce(Rect) -> T,
@@ -39,16 +39,16 @@ impl<T: Component> Confirm<T> {
     }
 }
 
-impl<T: Component> Component for Confirm<T> {
-    type Msg = ConfirmMsg<T>;
+impl<T: Component> Component for Dialog<T> {
+    type Msg = DialogMsg<T>;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some(msg) = self.content.event(ctx, event) {
-            Some(ConfirmMsg::Content(msg))
+            Some(DialogMsg::Content(msg))
         } else if let Some(Clicked) = self.left_btn.as_mut().and_then(|b| b.event(ctx, event)) {
-            Some(ConfirmMsg::LeftClicked)
+            Some(DialogMsg::LeftClicked)
         } else if let Some(Clicked) = self.right_btn.as_mut().and_then(|b| b.event(ctx, event)) {
-            Some(ConfirmMsg::RightClicked)
+            Some(DialogMsg::RightClicked)
         } else {
             None
         }
@@ -56,7 +56,11 @@ impl<T: Component> Component for Confirm<T> {
 
     fn paint(&mut self) {
         self.content.paint();
-        self.left_btn.as_mut().map(|b| b.paint());
-        self.right_btn.as_mut().map(|b| b.paint());
+        if let Some(b) = self.left_btn.as_mut() {
+            b.paint();
+        }
+        if let Some(b) = self.right_btn.as_mut() {
+            b.paint();
+        }
     }
 }

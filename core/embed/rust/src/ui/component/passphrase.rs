@@ -9,8 +9,8 @@ use crate::ui::{
 };
 
 use super::{
+    base::{Child, Component, Event, EventCtx, Never, TimerToken},
     button::{Button, ButtonContent, ButtonMsg::Clicked},
-    component::{Child, Component, Event, EventCtx, Never, TimerToken},
     swipe::{Swipe, SwipeDirection},
 };
 
@@ -135,8 +135,7 @@ impl PassphraseKeyboard {
 
     fn on_backspace_click(&mut self, ctx: &mut EventCtx) {
         self.pending.take();
-        self.textbox
-            .mutate(ctx, |ctx, textbox| textbox.delete_last(ctx));
+        self.textbox.mutate(ctx, |ctx, t| t.delete_last(ctx));
         self.after_edit(ctx);
     }
 
@@ -149,14 +148,14 @@ impl PassphraseKeyboard {
                 // key content.
                 let char = (pending.char + 1) % content.len();
                 self.textbox
-                    .mutate(ctx, |ctx, textbox| textbox.replace_last(ctx, content[char]));
+                    .mutate(ctx, |ctx, t| t.replace_last(ctx, content[char]));
                 char
             }
             _ => {
                 // This key is not pending. Append the first character in the key.
                 let char = 0;
                 self.textbox
-                    .mutate(ctx, |ctx, textbox| textbox.append(ctx, content[char]));
+                    .mutate(ctx, |ctx, t| t.append(ctx, content[char]));
                 char
             }
         };
@@ -174,9 +173,8 @@ impl PassphraseKeyboard {
             None
         };
         let is_pending = self.pending.is_some();
-        self.textbox.mutate(ctx, |ctx, textbox| {
-            textbox.toggle_pending_marker(ctx, is_pending);
-        });
+        self.textbox
+            .mutate(ctx, |ctx, t| t.toggle_pending_marker(ctx, is_pending));
 
         self.after_edit(ctx);
     }
@@ -194,9 +192,9 @@ impl PassphraseKeyboard {
 
     fn after_edit(&mut self, ctx: &mut EventCtx) {
         if self.textbox.inner().is_empty() {
-            self.back_btn.mutate(ctx, |ctx, button| button.disable(ctx));
+            self.back_btn.mutate(ctx, |ctx, b| b.disable(ctx));
         } else {
-            self.back_btn.mutate(ctx, |ctx, button| button.enable(ctx));
+            self.back_btn.mutate(ctx, |ctx, b| b.enable(ctx));
         }
     }
 }

@@ -98,13 +98,10 @@ impl LayoutObj {
         while let Some((token, deadline)) = inner.event_ctx.pop_timer() {
             let token = token.try_into();
             let deadline = deadline.try_into();
-            match (token, deadline) {
-                (Ok(token), Ok(deadline)) => {
-                    inner.timer_fn.call_with_n_args(&[token, deadline]);
-                }
-                _ => {
-                    // Failed to convert token or deadline into `Obj`, skip.
-                }
+            if let (Ok(token), Ok(deadline)) = (token, deadline) {
+                inner.timer_fn.call_with_n_args(&[token, deadline]);
+            } else {
+                // Failed to convert token or deadline into `Obj`, skip.
             }
         }
 
@@ -134,13 +131,13 @@ impl LayoutObj {
     }
 }
 
-impl Into<Obj> for Gc<LayoutObj> {
-    fn into(self) -> Obj {
+impl From<Gc<LayoutObj>> for Obj {
+    fn from(val: Gc<LayoutObj>) -> Self {
         // SAFETY:
         //  - We are GC-allocated.
         //  - We are `repr(C)`.
         //  - We have a `base` as the first field with the correct type.
-        unsafe { Obj::from_ptr(Self::into_raw(self).cast()) }
+        unsafe { Obj::from_ptr(Gc::into_raw(val).cast()) }
     }
 }
 

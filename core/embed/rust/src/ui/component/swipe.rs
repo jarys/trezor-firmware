@@ -1,12 +1,10 @@
-use core::ops::RangeInclusive;
-
 use crate::ui::{
     display,
     math::{Point, Rect},
     theme,
 };
 
-use super::component::{Component, Event, EventCtx};
+use super::base::{Component, Event, EventCtx};
 
 pub enum SwipeDirection {
     Up,
@@ -21,7 +19,8 @@ pub struct Swipe {
     allow_down: bool,
     allow_left: bool,
     allow_right: bool,
-    backlight: RangeInclusive<i32>,
+    backlight_start: i32,
+    backlight_end: i32,
     origin: Option<Point>,
 }
 
@@ -36,7 +35,8 @@ impl Swipe {
             allow_down: false,
             allow_left: false,
             allow_right: false,
-            backlight: theme::BACKLIGHT_NORMAL..=theme::BACKLIGHT_NONE,
+            backlight_start: theme::BACKLIGHT_NORMAL,
+            backlight_end: theme::BACKLIGHT_NONE,
             origin: None,
         }
     }
@@ -74,8 +74,8 @@ impl Swipe {
     }
 
     fn backlight(&self, ratio: f32) {
-        let start = *self.backlight.start() as f32;
-        let end = *self.backlight.end() as f32;
+        let start = self.backlight_start as f32;
+        let end = self.backlight_end as f32;
         let value = start + ratio * (end - start);
         display::backlight(value as i32);
     }

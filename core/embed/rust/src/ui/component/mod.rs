@@ -1,6 +1,6 @@
+mod base;
 mod button;
-mod component;
-mod confirm;
+mod dialog;
 mod empty;
 mod label;
 mod map;
@@ -10,9 +10,9 @@ mod pin;
 mod swipe;
 pub mod text;
 
+pub use base::{Child, Component, Event, EventCtx, Never, TimerToken};
 pub use button::{Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet};
-pub use component::{Child, Component, Event, EventCtx, Never, TimerToken};
-pub use confirm::{Confirm, ConfirmMsg};
+pub use dialog::{Dialog, DialogMsg};
 pub use empty::Empty;
 pub use label::{Label, LabelStyle};
 pub use map::Map;

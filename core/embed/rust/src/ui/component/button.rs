@@ -3,7 +3,7 @@ use crate::ui::{
     math::{Color, Offset, Rect},
 };
 
-use super::component::{Component, Event, EventCtx};
+use super::base::{Component, Event, EventCtx};
 
 pub enum ButtonMsg {
     Clicked,

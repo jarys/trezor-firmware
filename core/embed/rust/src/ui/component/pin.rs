@@ -8,8 +8,8 @@ use crate::ui::{
 };
 
 use super::{
+    base::{Child, Component, Event, EventCtx, Never},
     button::{Button, ButtonContent, ButtonMsg::Clicked},
-    component::{Child, Component, Event, EventCtx, Never},
     label::{Label, LabelStyle},
 };
 

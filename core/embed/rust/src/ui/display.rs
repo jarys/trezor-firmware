@@ -73,11 +73,11 @@ impl Font {
         Self { id }
     }
 
-    pub fn text_width(&self, text: &[u8]) -> i32 {
-        text_width(text, *self)
+    pub fn text_width(self, text: &[u8]) -> i32 {
+        text_width(text, self)
     }
 
-    pub fn line_height(&self) -> i32 {
+    pub fn line_height(self) -> i32 {
         line_height()
     }
 }

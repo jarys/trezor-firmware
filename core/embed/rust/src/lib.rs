@@ -1,5 +1,6 @@
 #![cfg_attr(not(test), no_std)]
 #![deny(clippy::all)]
+#![allow(clippy::new_without_default)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![allow(dead_code)]
 

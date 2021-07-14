@@ -5,7 +5,7 @@ use crate::ui::{
 };
 
 use super::{
-    component::{Component, Event, EventCtx},
+    base::{Component, Event, EventCtx},
     Never, Swipe, SwipeDirection,
 };
 
@@ -50,10 +50,9 @@ impl<T: Component> Component for Page<T> {
             }
         }
         if let Some(msg) = self.page.event(ctx, event) {
-            Some(PageMsg::Content(msg))
-        } else {
-            None
+            return Some(PageMsg::Content(msg));
         }
+        None
     }
 
     fn paint(&mut self) {

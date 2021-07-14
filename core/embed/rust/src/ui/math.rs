@@ -113,12 +113,12 @@ impl Rect {
         Self::new(p0, p0 + size)
     }
 
-    pub fn from_center_and_size(m: Point, size: Offset) -> Self {
+    pub fn from_center_and_size(p: Point, size: Offset) -> Self {
         Self {
-            x0: m.x - size.x / 2,
-            y0: m.y - size.y / 2,
-            x1: m.x + size.x / 2,
-            y1: m.y + size.y / 2,
+            x0: p.x - size.x / 2,
+            y0: p.y - size.y / 2,
+            x1: p.x + size.x / 2,
+            y1: p.y + size.y / 2,
         }
     }
 
