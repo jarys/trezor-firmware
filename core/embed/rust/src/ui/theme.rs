@@ -1,7 +1,6 @@
 use super::{
     component::{ButtonStyle, ButtonStyleSheet, LabelStyle},
-    display::Font,
-    math::Color,
+    display::{Color, Font},
 };
 
 // Font constants.

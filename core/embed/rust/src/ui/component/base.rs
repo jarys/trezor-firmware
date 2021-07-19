@@ -3,7 +3,7 @@ use core::time::Duration;
 
 use heapless::Vec;
 
-use crate::ui::math::Point;
+use crate::ui::geometry::Point;
 
 /// Type used by components that do not return any messages.
 ///

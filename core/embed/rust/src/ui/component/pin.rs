@@ -3,7 +3,7 @@ use heapless::Vec;
 use crate::trezorhal::random;
 use crate::ui::{
     display,
-    math::{Grid, Offset, Point, Rect},
+    geometry::{Grid, Offset, Point, Rect},
     theme,
 };
 

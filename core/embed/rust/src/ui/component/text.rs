@@ -5,8 +5,8 @@ use heapless::LinearMap;
 
 use crate::ui::{
     display,
-    display::Font,
-    math::{Color, Offset, Point, Rect},
+    display::{Color, Font},
+    geometry::{Offset, Point, Rect},
     theme,
 };
 

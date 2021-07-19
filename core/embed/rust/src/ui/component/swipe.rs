@@ -1,6 +1,6 @@
 use crate::ui::{
     display,
-    math::{Point, Rect},
+    geometry::{Point, Rect},
     theme,
 };
 
@@ -15,10 +15,10 @@ pub enum SwipeDirection {
 
 pub struct Swipe {
     area: Rect,
-    allow_up: bool,
-    allow_down: bool,
-    allow_left: bool,
-    allow_right: bool,
+    pub allow_up: bool,
+    pub allow_down: bool,
+    pub allow_left: bool,
+    pub allow_right: bool,
     backlight_start: i32,
     backlight_end: i32,
     origin: Option<Point>,

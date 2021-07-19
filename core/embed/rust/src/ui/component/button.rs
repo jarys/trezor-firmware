@@ -1,6 +1,6 @@
 use crate::ui::{
-    display::{self, Font},
-    math::{Color, Offset, Rect},
+    display::{self, Color, Font},
+    geometry::{Offset, Rect},
 };
 
 use super::base::{Component, Event, EventCtx};

@@ -1,4 +1,4 @@
-use crate::ui::math::{Grid, Rect};
+use crate::ui::geometry::{Grid, Rect};
 
 use super::{
     base::{Child, Component, Event, EventCtx},

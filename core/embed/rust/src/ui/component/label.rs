@@ -1,8 +1,8 @@
 use core::ops::Deref;
 
 use crate::ui::{
-    display::{self, Font},
-    math::{Align, Color, Point, Rect},
+    display::{self, Color, Font},
+    geometry::{Align, Point, Rect},
 };
 
 use super::base::{Component, Event, EventCtx, Never};

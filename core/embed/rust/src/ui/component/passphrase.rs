@@ -4,7 +4,7 @@ use heapless::Vec;
 
 use crate::ui::{
     display,
-    math::{Grid, Rect},
+    geometry::{Grid, Rect},
     theme,
 };
 

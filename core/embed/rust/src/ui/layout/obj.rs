@@ -15,7 +15,7 @@ use crate::{
     },
     ui::{
         component::{Child, Component, Event, EventCtx, TimerToken},
-        math::Point,
+        geometry::Point,
     },
     util,
 };

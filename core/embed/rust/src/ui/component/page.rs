@@ -1,6 +1,6 @@
 use crate::ui::{
     display,
-    math::{Offset, Point, Rect},
+    geometry::{Offset, Point, Rect},
     theme,
 };
 
@@ -22,9 +22,13 @@ pub struct Page<T> {
 
 impl<T> Page<T> {
     pub fn new(area: Rect, page: T, page_count: usize, active_page: usize) -> Self {
+        let scrollbar = ScrollBar::vertical_right(area, page_count, active_page);
+        let mut swipe = Swipe::new(area);
+        swipe.allow_up = scrollbar.has_next_page();
+        swipe.allow_down = scrollbar.has_previous_page();
         Self {
-            swipe: Swipe::vertical(area),
-            scrollbar: ScrollBar::vertical_right(area, page_count, active_page),
+            swipe,
+            scrollbar,
             page,
         }
     }
@@ -77,6 +81,14 @@ impl ScrollBar {
             page_count,
             active_page,
         }
+    }
+
+    pub fn has_next_page(&self) -> bool {
+        self.active_page < self.page_count - 1
+    }
+
+    pub fn has_previous_page(&self) -> bool {
+        self.active_page > 0
     }
 
     pub fn next_page(&self) -> usize {
