@@ -64,6 +64,20 @@ impl<'arg> Text<'arg> {
     pub fn layout_mut(&mut self) -> &mut TextLayout {
         &mut self.layout
     }
+
+    fn layout_content(&self, sink: &mut dyn LayoutSink) {
+        self.layout.clone().layout_formatted(
+            self.format,
+            |arg| match arg {
+                Token::Literal(literal) => Some(Op::Text(literal)),
+                Token::Argument(b"mono") => Some(Op::Font(theme::FONT_MONO)),
+                Token::Argument(b"bold") => Some(Op::Font(theme::FONT_BOLD)),
+                Token::Argument(b"normal") => Some(Op::Font(theme::FONT_NORMAL)),
+                Token::Argument(argument) => self.args.get(argument).map(|value| Op::Text(value)),
+            },
+            sink,
+        );
+    }
 }
 
 impl<'arg> Component for Text<'arg> {
@@ -74,15 +88,49 @@ impl<'arg> Component for Text<'arg> {
     }
 
     fn paint(&mut self) {
-        self.layout
-            .clone()
-            .render_formatted(self.format, |arg| match arg {
-                Token::Literal(literal) => Some(Op::Text(literal)),
-                Token::Argument(b"mono") => Some(Op::Font(theme::FONT_MONO)),
-                Token::Argument(b"bold") => Some(Op::Font(theme::FONT_BOLD)),
-                Token::Argument(b"normal") => Some(Op::Font(theme::FONT_NORMAL)),
-                Token::Argument(argument) => self.args.get(argument).map(|value| Op::Text(value)),
-            });
+        self.layout_content(&mut TextRenderer);
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+mod trace {
+    use super::*;
+
+    pub struct TraceSink<'a>(pub &'a mut dyn crate::trace::Tracer);
+
+    impl<'a> LayoutSink for TraceSink<'a> {
+        fn text(&mut self, _cursor: Point, _layout: &TextLayout, text: &[u8]) {
+            self.0.bytes(text);
+        }
+
+        fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {
+            self.0.str("-");
+        }
+
+        fn ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {
+            self.0.str("...");
+        }
+
+        fn line_break(&mut self, _cursor: Point) {
+            self.0.str("\n");
+        }
+    }
+
+    pub struct TraceText<'a, 't>(pub &'a Text<'t>);
+
+    impl<'a, 't> crate::trace::Trace for TraceText<'a, 't> {
+        fn trace(&self, d: &mut dyn crate::trace::Tracer) {
+            self.0.layout_content(&mut TraceSink(d));
+        }
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<'arg> crate::trace::Trace for Text<'arg> {
+    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
+        d.open("Text");
+        d.field("content", &trace::TraceText(self));
+        d.close();
     }
 }
 
@@ -149,7 +197,12 @@ impl TextLayout {
         }
     }
 
-    pub fn render_formatted<'op, F, I>(self, format: &'static str, resolve: F) -> LayoutFit
+    pub fn layout_formatted<'op, F, I>(
+        self,
+        format: &'static str,
+        resolve: F,
+        sink: &mut dyn LayoutSink,
+    ) -> LayoutFit
     where
         F: Fn(Token<'static>) -> I,
         I: IntoIterator<Item = Op<'op>>,
@@ -159,7 +212,7 @@ impl TextLayout {
         self.layout_op_stream(
             &mut Tokenizer::new(format).flat_map(resolve),
             &mut cursor,
-            &mut TextRenderer,
+            sink,
         )
     }
 
@@ -265,6 +318,9 @@ impl TextLayout {
                     // Advance the cursor to the beginning of the next line.
                     cursor.x = self.bounds.x0;
                     cursor.y += span.advance.y;
+
+                    // Report a line break. While rendering works using the cursor coordinates, we use explicit line-break reporting in the `ufmt::uDebug` impl.
+                    sink.line_break(*cursor);
                 }
             }
         }
@@ -273,11 +329,6 @@ impl TextLayout {
             processed_chars: text.len(),
         }
     }
-}
-
-pub struct LayoutMeasurement {
-    processed_chars: usize,
-    height: i32,
 }
 
 pub enum LayoutFit {
@@ -290,6 +341,7 @@ pub trait LayoutSink {
     fn text(&mut self, _cursor: Point, _layout: &TextLayout, _text: &[u8]) {}
     fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {}
     fn ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {}
+    fn line_break(&mut self, _cursor: Point) {}
     fn out_of_bounds(&mut self) {}
 }
 

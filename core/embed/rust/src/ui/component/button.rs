@@ -176,6 +176,18 @@ impl Component for Button {
     }
 }
 
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for Button {
+    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
+        d.open("Button");
+        match self.content {
+            ButtonContent::Text(text) => d.field("text", &text),
+            ButtonContent::Image(_) => d.tag("image"),
+        }
+        d.close();
+    }
+}
+
 #[derive(PartialEq, Eq)]
 enum State {
     Initial,

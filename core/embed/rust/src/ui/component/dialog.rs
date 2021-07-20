@@ -64,3 +64,17 @@ impl<T: Component> Component for Dialog<T> {
         }
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl<T> crate::trace::Trace for Dialog<T>
+where
+    T: crate::trace::Trace,
+{
+    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
+        d.open("Dialog");
+        d.field("content", &self.content);
+        d.field("left", &self.left_btn);
+        d.field("right", &self.right_btn);
+        d.close();
+    }
+}

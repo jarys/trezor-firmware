@@ -42,3 +42,67 @@ extern "C" fn ui_layout_new_example() -> Obj {
     )))
     .into()
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::trace::{Trace, Tracer};
+
+    use super::*;
+
+    impl Tracer for Vec<u8> {
+        fn bytes(&mut self, b: &[u8]) {
+            self.extend(b)
+        }
+
+        fn str(&mut self, s: &str) {
+            self.extend(s.as_bytes())
+        }
+
+        fn tag(&mut self, t: &str) {
+            self.extend(t.as_bytes())
+        }
+
+        fn open(&mut self, name: &str) {
+            self.extend(b"<");
+            self.extend(name.as_bytes());
+            self.extend(b" ");
+        }
+
+        fn field(&mut self, name: &str, value: &dyn Trace) {
+            self.extend(name.as_bytes());
+            self.extend(b":");
+            value.trace(self);
+            self.extend(b" ");
+        }
+
+        fn close(&mut self) {
+            self.extend(b">")
+        }
+    }
+
+    fn trace(val: &impl Trace) -> String {
+        let mut t = Vec::new();
+        val.trace(&mut t);
+        String::from_utf8(t).unwrap()
+    }
+
+    #[test]
+    fn trace_example_layout() {
+        let layout = Child::new(Dialog::new(
+            display::screen(),
+            |area| {
+                Text::new(area)
+                    .format("Testing text layout, with some text, and some more text. And {param}")
+                    .with(b"param", b"parameters!")
+            },
+            |area| Button::with_text(area, b"Left", theme::button_default()),
+            |area| Button::with_text(area, b"Right", theme::button_default()),
+        ));
+        assert_eq!(
+            trace(&layout),
+            r#"<Dialog content:<Text content:Testing text layout, with
+some text, and some more
+text. And parameters! > left:<Button text:Left > right:<Button text:Right > >"#
+        )
+    }
+}

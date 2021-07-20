@@ -1,4 +1,3 @@
-use crate::error::Error;
 use core::{mem, slice};
 
 pub struct MsgDef {

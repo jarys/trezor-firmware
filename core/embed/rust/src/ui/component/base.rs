@@ -52,7 +52,10 @@ impl<T> Child<T> {
     }
 }
 
-impl<T: Component> Component for Child<T> {
+impl<T> Component for Child<T>
+where
+    T: Component,
+{
     type Msg = T::Msg;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -64,6 +67,16 @@ impl<T: Component> Component for Child<T> {
             self.marked_for_paint = false;
             self.component.paint();
         }
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T> crate::trace::Trace for Child<T>
+where
+    T: crate::trace::Trace,
+{
+    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
+        self.component.trace(d)
     }
 }
 

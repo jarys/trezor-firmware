@@ -8,6 +8,7 @@ mod error;
 #[macro_use]
 mod micropython;
 mod protobuf;
+mod trace;
 mod trezorhal;
 mod ui;
 mod util;
