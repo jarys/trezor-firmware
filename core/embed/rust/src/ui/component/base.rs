@@ -75,8 +75,8 @@ impl<T> crate::trace::Trace for Child<T>
 where
     T: crate::trace::Trace,
 {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        self.component.trace(d)
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        self.component.trace(t)
     }
 }
 

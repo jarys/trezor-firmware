@@ -45,6 +45,20 @@ where
     }
 }
 
+#[cfg(feature = "ui_debug")]
+mod maybe_trace {
+    pub trait ObjComponentTrace: super::ObjComponent + crate::trace::Trace {}
+    impl<T> ObjComponentTrace for T where T: super::ObjComponent + crate::trace::Trace {}
+}
+
+#[cfg(not(feature = "ui_debug"))]
+mod maybe_trace {
+    pub trait ObjComponentTrace: super::ObjComponent {}
+    impl<T> ObjComponentTrace for T where T: super::ObjComponent {}
+}
+
+use maybe_trace::ObjComponentTrace;
+
 /// `LayoutObj` is a GC-allocated object exported to MicroPython, with type
 /// `LayoutObj::obj_type()`. It wraps a root component through the
 /// `ObjComponent` trait.
@@ -55,16 +69,17 @@ pub struct LayoutObj {
 }
 
 struct LayoutObjInner {
-    root: Gc<dyn ObjComponent>,
+    root: Gc<dyn ObjComponentTrace>,
     event_ctx: EventCtx,
     timer_fn: Obj,
 }
 
 impl LayoutObj {
     /// Create a new `LayoutObj`, wrapping a root component.
-    pub fn new(root: impl ObjComponent + 'static) -> Gc<Self> {
+    pub fn new(root: impl ObjComponentTrace + 'static) -> Gc<Self> {
         // SAFETY: We are coercing GC-allocated sized ptr into an unsized one.
-        let root = unsafe { Gc::from_raw(Gc::into_raw(Gc::new(root)) as *mut dyn ObjComponent) };
+        let root =
+            unsafe { Gc::from_raw(Gc::into_raw(Gc::new(root)) as *mut dyn ObjComponentTrace) };
 
         Gc::new(Self {
             base: Self::obj_type().to_base(),
@@ -115,6 +130,45 @@ impl LayoutObj {
         unsafe { Gc::as_mut(&mut inner.root) }.obj_paint();
     }
 
+    /// Run a tracing pass over the component tree. Passed `trace_fn` is called
+    /// with each piece of tracing information.
+    #[cfg(feature = "ui_debug")]
+    fn obj_trace(&self, trace_fn: Obj) {
+        use crate::trace::{Trace, Tracer};
+
+        struct CallbackTracer(Obj);
+
+        impl Tracer for CallbackTracer {
+            fn bytes(&mut self, b: &[u8]) {
+                self.0.call_with_n_args(&[b.into()]);
+            }
+
+            fn str(&mut self, s: &str) {
+                self.0.call_with_n_args(&[s.into()]);
+            }
+
+            fn symbol(&mut self, name: &str) {
+                self.0.call_with_n_args(&[name.into()]);
+            }
+
+            fn open(&mut self, name: &str) {
+                self.0.call_with_n_args(&[name.into()]);
+            }
+
+            fn field(&mut self, name: &str, value: &dyn Trace) {
+                self.0.call_with_n_args(&[name.into()]);
+                value.trace(self);
+            }
+
+            fn close(&mut self) {}
+        }
+
+        self.inner
+            .borrow()
+            .root
+            .trace(&mut CallbackTracer(trace_fn));
+    }
+
     fn obj_type() -> &'static Type {
         static TYPE: Type = obj_type! {
             name: Qstr::MP_QSTR_Layout,
@@ -124,7 +178,8 @@ impl LayoutObj {
                 Qstr::MP_QSTR_touch_move => obj_fn_3!(ui_layout_touch_move).to_obj(),
                 Qstr::MP_QSTR_touch_end => obj_fn_3!(ui_layout_touch_end).to_obj(),
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).to_obj(),
-                Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).to_obj()
+                Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).to_obj(),
+                Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).to_obj(),
             }),
         };
         &TYPE
@@ -231,4 +286,18 @@ extern "C" fn ui_layout_paint(this: Obj) -> Obj {
         this.obj_paint_if_requested();
         Ok(Obj::const_true())
     })
+}
+
+#[cfg(feature = "ui_debug")]
+extern "C" fn ui_layout_trace(this: Obj, callback: Obj) -> Obj {
+    util::try_or_raise(|| {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        this.obj_trace(callback);
+        Ok(Obj::const_none())
+    })
+}
+
+#[cfg(not(feature = "ui_debug"))]
+extern "C" fn ui_layout_trace(this: Obj, callback: Obj) -> Obj {
+    Obj::const_none()
 }

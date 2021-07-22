@@ -178,13 +178,13 @@ impl Component for Button {
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for Button {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("Button");
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("Button");
         match self.content {
-            ButtonContent::Text(text) => d.field("text", &text),
-            ButtonContent::Image(_) => d.tag("image"),
+            ButtonContent::Text(text) => t.field("text", &text),
+            ButtonContent::Image(_) => t.symbol("image"),
         }
-        d.close();
+        t.close();
     }
 }
 

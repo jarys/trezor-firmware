@@ -127,10 +127,10 @@ mod trace {
 
 #[cfg(feature = "ui_debug")]
 impl<'arg> crate::trace::Trace for Text<'arg> {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("Text");
-        d.field("content", &trace::TraceText(self));
-        d.close();
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("Text");
+        t.field("content", &trace::TraceText(self));
+        t.close();
     }
 }
 
@@ -319,7 +319,8 @@ impl TextLayout {
                     cursor.x = self.bounds.x0;
                     cursor.y += span.advance.y;
 
-                    // Report a line break. While rendering works using the cursor coordinates, we use explicit line-break reporting in the `ufmt::uDebug` impl.
+                    // Report a line break. While rendering works using the cursor coordinates, we
+                    // use explicit line-break reporting in the `Trace` impl.
                     sink.line_break(*cursor);
                 }
             }

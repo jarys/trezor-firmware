@@ -58,8 +58,8 @@ mod tests {
             self.extend(s.as_bytes())
         }
 
-        fn tag(&mut self, t: &str) {
-            self.extend(t.as_bytes())
+        fn symbol(&mut self, name: &str) {
+            self.extend(name.as_bytes())
         }
 
         fn open(&mut self, name: &str) {

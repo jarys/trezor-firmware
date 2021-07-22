@@ -70,11 +70,11 @@ impl<T> crate::trace::Trace for Dialog<T>
 where
     T: crate::trace::Trace,
 {
-    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
-        d.open("Dialog");
-        d.field("content", &self.content);
-        d.field("left", &self.left_btn);
-        d.field("right", &self.right_btn);
-        d.close();
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("Dialog");
+        t.field("content", &self.content);
+        t.field("left", &self.left_btn);
+        t.field("right", &self.right_btn);
+        t.close();
     }
 }
