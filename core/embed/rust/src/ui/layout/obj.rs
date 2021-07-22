@@ -57,6 +57,8 @@ mod maybe_trace {
     impl<T> ObjComponentTrace for T where T: super::ObjComponent {}
 }
 
+/// Trait that combines `ObjComponent` with `Trace` if `ui_debug` is enabled,
+/// and pure `ObjComponent` otherwise.
 use maybe_trace::ObjComponentTrace;
 
 /// `LayoutObj` is a GC-allocated object exported to MicroPython, with type
@@ -130,10 +132,10 @@ impl LayoutObj {
         unsafe { Gc::as_mut(&mut inner.root) }.obj_paint();
     }
 
-    /// Run a tracing pass over the component tree. Passed `trace_fn` is called
+    /// Run a tracing pass over the component tree. Passed `callback` is called
     /// with each piece of tracing information.
     #[cfg(feature = "ui_debug")]
-    fn obj_trace(&self, trace_fn: Obj) {
+    fn obj_trace(&self, callback: Obj) {
         use crate::trace::{Trace, Tracer};
 
         struct CallbackTracer(Obj);
@@ -143,7 +145,7 @@ impl LayoutObj {
                 self.0.call_with_n_args(&[b.into()]);
             }
 
-            fn str(&mut self, s: &str) {
+            fn string(&mut self, s: &str) {
                 self.0.call_with_n_args(&[s.into()]);
             }
 
@@ -166,7 +168,7 @@ impl LayoutObj {
         self.inner
             .borrow()
             .root
-            .trace(&mut CallbackTracer(trace_fn));
+            .trace(&mut CallbackTracer(callback));
     }
 
     fn obj_type() -> &'static Type {
@@ -298,6 +300,6 @@ extern "C" fn ui_layout_trace(this: Obj, callback: Obj) -> Obj {
 }
 
 #[cfg(not(feature = "ui_debug"))]
-extern "C" fn ui_layout_trace(this: Obj, callback: Obj) -> Obj {
+extern "C" fn ui_layout_trace(_this: Obj, _callback: Obj) -> Obj {
     Obj::const_none()
 }

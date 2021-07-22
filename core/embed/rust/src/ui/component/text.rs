@@ -104,15 +104,15 @@ mod trace {
         }
 
         fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {
-            self.0.str("-");
+            self.0.string("-");
         }
 
         fn ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {
-            self.0.str("...");
+            self.0.string("...");
         }
 
         fn line_break(&mut self, _cursor: Point) {
-            self.0.str("\n");
+            self.0.string("\n");
         }
     }
 

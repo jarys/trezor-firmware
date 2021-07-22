@@ -54,7 +54,7 @@ mod tests {
             self.extend(b)
         }
 
-        fn str(&mut self, s: &str) {
+        fn string(&mut self, s: &str) {
             self.extend(s.as_bytes())
         }
 

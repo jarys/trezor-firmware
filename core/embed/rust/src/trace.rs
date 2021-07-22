@@ -1,7 +1,7 @@
 /// Visitor passed into `Trace` types.
 pub trait Tracer {
     fn bytes(&mut self, b: &[u8]);
-    fn str(&mut self, s: &str);
+    fn string(&mut self, s: &str);
     fn symbol(&mut self, name: &str);
     fn open(&mut self, name: &str);
     fn field(&mut self, name: &str, value: &dyn Trace);
@@ -21,7 +21,7 @@ impl Trace for &[u8] {
 
 impl Trace for &str {
     fn trace(&self, t: &mut dyn Tracer) {
-        t.str(self);
+        t.string(self);
     }
 }
 
