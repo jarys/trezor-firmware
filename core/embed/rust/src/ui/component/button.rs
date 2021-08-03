@@ -59,9 +59,9 @@ impl Button {
 
     fn style(&self) -> &ButtonStyle {
         match self.state {
-            State::Initial | State::Released => &self.styles.normal,
-            State::Pressed => &self.styles.active,
-            State::Disabled => &self.styles.disabled,
+            State::Initial | State::Released => self.styles.normal,
+            State::Pressed => self.styles.active,
+            State::Disabled => self.styles.disabled,
         }
     }
 
