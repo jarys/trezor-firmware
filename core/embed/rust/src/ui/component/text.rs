@@ -12,15 +12,15 @@ use crate::ui::{
 
 use super::{Component, Event, EventCtx, Never};
 
-pub struct Text<'arg> {
+pub const MAX_ARGUMENTS: usize = 6;
+
+pub struct Text<T> {
     layout: TextLayout,
     format: &'static str,
-    args: LinearMap<&'static [u8], &'arg [u8], { Text::MAX_ARGUMENTS }>,
+    args: LinearMap<&'static [u8], T, MAX_ARGUMENTS>,
 }
 
-impl<'arg> Text<'arg> {
-    pub const MAX_ARGUMENTS: usize = 6;
-
+impl<T> Text<T> {
     pub fn new(area: Rect) -> Self {
         Self {
             layout: TextLayout::new(area),
@@ -34,7 +34,7 @@ impl<'arg> Text<'arg> {
         self
     }
 
-    pub fn with(mut self, key: &'static [u8], value: &'arg [u8]) -> Self {
+    pub fn with(mut self, key: &'static [u8], value: T) -> Self {
         if self.args.insert(key, value).is_err() {
             // Map is full, ignore.
         }
@@ -64,23 +64,34 @@ impl<'arg> Text<'arg> {
     pub fn layout_mut(&mut self) -> &mut TextLayout {
         &mut self.layout
     }
+}
 
+impl<T> Text<T>
+where
+    T: AsRef<[u8]>,
+{
     fn layout_content(&self, sink: &mut dyn LayoutSink) {
-        self.layout.clone().layout_formatted(
+        self.layout.layout_formatted(
             self.format,
             |arg| match arg {
                 Token::Literal(literal) => Some(Op::Text(literal)),
                 Token::Argument(b"mono") => Some(Op::Font(theme::FONT_MONO)),
                 Token::Argument(b"bold") => Some(Op::Font(theme::FONT_BOLD)),
                 Token::Argument(b"normal") => Some(Op::Font(theme::FONT_NORMAL)),
-                Token::Argument(argument) => self.args.get(argument).map(|value| Op::Text(value)),
+                Token::Argument(argument) => self
+                    .args
+                    .get(argument)
+                    .map(|value| Op::Text(value.as_ref())),
             },
             sink,
         );
     }
 }
 
-impl<'arg> Component for Text<'arg> {
+impl<T> Component for Text<T>
+where
+    T: AsRef<[u8]>,
+{
     type Msg = Never;
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
@@ -116,9 +127,12 @@ mod trace {
         }
     }
 
-    pub struct TraceText<'a, 't>(pub &'a Text<'t>);
+    pub struct TraceText<'a, T>(pub &'a Text<T>);
 
-    impl<'a, 't> crate::trace::Trace for TraceText<'a, 't> {
+    impl<'a, T> crate::trace::Trace for TraceText<'a, T>
+    where
+        T: AsRef<[u8]>,
+    {
         fn trace(&self, d: &mut dyn crate::trace::Tracer) {
             self.0.layout_content(&mut TraceSink(d));
         }
@@ -126,7 +140,10 @@ mod trace {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<'arg> crate::trace::Trace for Text<'arg> {
+impl<T> crate::trace::Trace for Text<T>
+where
+    T: AsRef<[u8]>,
+{
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Text");
         t.field("content", &trace::TraceText(self));
@@ -197,6 +214,13 @@ impl TextLayout {
         }
     }
 
+    pub fn initial_cursor(&self) -> Point {
+        Point::new(
+            self.bounds.top_left().x,
+            self.bounds.top_left().y + self.text_font.line_height(),
+        )
+    }
+
     pub fn layout_formatted<'op, F, I>(
         self,
         format: &'static str,
@@ -213,13 +237,6 @@ impl TextLayout {
             &mut Tokenizer::new(format).flat_map(resolve),
             &mut cursor,
             sink,
-        )
-    }
-
-    fn initial_cursor(&self) -> Point {
-        Point::new(
-            self.bounds.top_left().x,
-            self.bounds.top_left().y + self.text_font.line_height(),
         )
     }
 
@@ -277,7 +294,7 @@ impl TextLayout {
             );
 
             // Report the span at the cursor position.
-            sink.text(*cursor, &self, &remaining_text[..span.length]);
+            sink.text(*cursor, self, &remaining_text[..span.length]);
 
             // Continue with the rest of the remaining_text.
             remaining_text = &remaining_text[span.length + span.skip_next_chars..];
@@ -290,7 +307,7 @@ impl TextLayout {
 
                 // Check if we should be appending a hyphen at this point.
                 if span.insert_hyphen_before_line_break {
-                    sink.hyphen(*cursor, &self);
+                    sink.hyphen(*cursor, self);
                 }
                 // Check the amount of vertical space we have left.
                 if cursor.y + span.advance.y > self.bounds.y1 {
@@ -301,7 +318,7 @@ impl TextLayout {
                             matches!(self.page_breaking, PageBreaking::CutAndInsertEllipsis)
                                 && !span.insert_hyphen_before_line_break;
                         if should_append_ellipsis {
-                            sink.ellipsis(*cursor, &self);
+                            sink.ellipsis(*cursor, self);
                         }
                         // TODO: This does not work in case we are the last
                         // fitting text token on the line, with more text tokens
