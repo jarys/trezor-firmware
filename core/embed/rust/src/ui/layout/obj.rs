@@ -84,7 +84,7 @@ impl LayoutObj {
             unsafe { Gc::from_raw(Gc::into_raw(Gc::new(root)) as *mut dyn ObjComponentTrace) };
 
         Gc::new(Self {
-            base: Self::obj_type().to_base(),
+            base: Self::obj_type().as_base(),
             inner: RefCell::new(LayoutObjInner {
                 root,
                 event_ctx: EventCtx::new(),
@@ -175,13 +175,13 @@ impl LayoutObj {
         static TYPE: Type = obj_type! {
             name: Qstr::MP_QSTR_Layout,
             locals: &obj_dict!(obj_map! {
-                Qstr::MP_QSTR_set_timer_fn => obj_fn_2!(ui_layout_set_timer_fn).to_obj(),
-                Qstr::MP_QSTR_touch_start => obj_fn_3!(ui_layout_touch_start).to_obj(),
-                Qstr::MP_QSTR_touch_move => obj_fn_3!(ui_layout_touch_move).to_obj(),
-                Qstr::MP_QSTR_touch_end => obj_fn_3!(ui_layout_touch_end).to_obj(),
-                Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).to_obj(),
-                Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).to_obj(),
-                Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).to_obj(),
+                Qstr::MP_QSTR_set_timer_fn => obj_fn_2!(ui_layout_set_timer_fn).as_obj(),
+                Qstr::MP_QSTR_touch_start => obj_fn_3!(ui_layout_touch_start).as_obj(),
+                Qstr::MP_QSTR_touch_move => obj_fn_3!(ui_layout_touch_move).as_obj(),
+                Qstr::MP_QSTR_touch_end => obj_fn_3!(ui_layout_touch_end).as_obj(),
+                Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
+                Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
+                Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).as_obj(),
             }),
         };
         &TYPE
