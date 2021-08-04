@@ -38,7 +38,10 @@ extern "C" fn ui_layout_new_example(param: Obj) -> Obj {
         display::screen(),
         |area| {
             Text::new(area)
-                .format("Testing text layout, with some text, and some more text. And {param}")
+                .format(
+                    "Testing text layout, with some text, and some more text. And {some} {param}",
+                )
+                .with(b"some", "a few".into())
                 .with(b"param", param)
         },
         |area| Button::with_text(area, b"Left", theme::button_default()),
