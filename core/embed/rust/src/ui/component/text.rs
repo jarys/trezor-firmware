@@ -14,22 +14,22 @@ use super::{Component, Event, EventCtx, Never};
 
 pub const MAX_ARGUMENTS: usize = 6;
 
-pub struct Text<T> {
+pub struct Text<F, T> {
     layout: TextLayout,
-    format: &'static str,
+    format: F,
     args: LinearMap<&'static [u8], T, MAX_ARGUMENTS>,
 }
 
-impl<T> Text<T> {
-    pub fn new(area: Rect) -> Self {
+impl<F, T> Text<F, T> {
+    pub fn new(area: Rect, format: F) -> Self {
         Self {
             layout: TextLayout::new(area),
-            format: "",
+            format,
             args: LinearMap::new(),
         }
     }
 
-    pub fn format(mut self, format: &'static str) -> Self {
+    pub fn format(mut self, format: F) -> Self {
         self.format = format;
         self
     }
@@ -66,13 +66,14 @@ impl<T> Text<T> {
     }
 }
 
-impl<T> Text<T>
+impl<F, T> Text<F, T>
 where
+    F: AsRef<[u8]>,
     T: AsRef<[u8]>,
 {
     fn layout_content(&self, sink: &mut dyn LayoutSink) {
         self.layout.layout_formatted(
-            self.format,
+            self.format.as_ref(),
             |arg| match arg {
                 Token::Literal(literal) => Some(Op::Text(literal)),
                 Token::Argument(b"mono") => Some(Op::Font(theme::FONT_MONO)),
@@ -88,8 +89,9 @@ where
     }
 }
 
-impl<T> Component for Text<T>
+impl<F, T> Component for Text<F, T>
 where
+    F: AsRef<[u8]>,
     T: AsRef<[u8]>,
 {
     type Msg = Never;
@@ -127,10 +129,11 @@ mod trace {
         }
     }
 
-    pub struct TraceText<'a, T>(pub &'a Text<T>);
+    pub struct TraceText<'a, F, T>(pub &'a Text<F, T>);
 
-    impl<'a, T> crate::trace::Trace for TraceText<'a, T>
+    impl<'a, F, T> crate::trace::Trace for TraceText<'a, F, T>
     where
+        F: AsRef<[u8]>,
         T: AsRef<[u8]>,
     {
         fn trace(&self, d: &mut dyn crate::trace::Tracer) {
@@ -140,8 +143,9 @@ mod trace {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Text<T>
+impl<F, T> crate::trace::Trace for Text<F, T>
 where
+    F: AsRef<[u8]>,
     T: AsRef<[u8]>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
@@ -221,15 +225,15 @@ impl TextLayout {
         )
     }
 
-    pub fn layout_formatted<'op, F, I>(
+    pub fn layout_formatted<'f, 'o, F, I>(
         self,
-        format: &'static str,
+        format: &'f [u8],
         resolve: F,
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit
     where
-        F: Fn(Token<'static>) -> I,
-        I: IntoIterator<Item = Op<'op>>,
+        F: Fn(Token<'f>) -> I,
+        I: IntoIterator<Item = Op<'o>>,
     {
         let mut cursor = self.initial_cursor();
 
@@ -240,9 +244,9 @@ impl TextLayout {
         )
     }
 
-    pub fn layout_op_stream<'op>(
+    pub fn layout_op_stream<'o>(
         mut self,
-        ops: &mut dyn Iterator<Item = Op<'op>>,
+        ops: &mut dyn Iterator<Item = Op<'o>>,
         cursor: &mut Point,
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {
@@ -425,9 +429,9 @@ pub struct Tokenizer<'a> {
 }
 
 impl<'a> Tokenizer<'a> {
-    /// Create a new tokenizer for `format`, returning an iterator.
-    pub fn new(format: &'a str) -> Self {
-        let input = format.as_bytes();
+    /// Create a new tokenizer for bytes of a formatting string `input`,
+    /// returning an iterator.
+    pub fn new(input: &'a [u8]) -> Self {
         Self {
             input,
             inner: input.iter().enumerate().peekable(),
@@ -614,22 +618,22 @@ mod tests {
     fn tokenizer_yields_expected_tokens() {
         use std::array::IntoIter;
 
-        assert!(Tokenizer::new("").eq(IntoIter::new([])));
-        assert!(Tokenizer::new("x").eq(IntoIter::new([Token::Literal(b"x")])));
-        assert!(Tokenizer::new("x\0y").eq(IntoIter::new([Token::Literal("x\0y".as_bytes())])));
-        assert!(Tokenizer::new("{").eq(IntoIter::new([])));
-        assert!(Tokenizer::new("x{").eq(IntoIter::new([Token::Literal(b"x")])));
-        assert!(Tokenizer::new("x{y").eq(IntoIter::new([Token::Literal(b"x")])));
-        assert!(Tokenizer::new("{}").eq(IntoIter::new([Token::Argument(b"")])));
-        assert!(Tokenizer::new("x{}y{").eq(IntoIter::new([
+        assert!(Tokenizer::new(b"").eq(IntoIter::new([])));
+        assert!(Tokenizer::new(b"x").eq(IntoIter::new([Token::Literal(b"x")])));
+        assert!(Tokenizer::new(b"x\0y").eq(IntoIter::new([Token::Literal("x\0y".as_bytes())])));
+        assert!(Tokenizer::new(b"{").eq(IntoIter::new([])));
+        assert!(Tokenizer::new(b"x{").eq(IntoIter::new([Token::Literal(b"x")])));
+        assert!(Tokenizer::new(b"x{y").eq(IntoIter::new([Token::Literal(b"x")])));
+        assert!(Tokenizer::new(b"{}").eq(IntoIter::new([Token::Argument(b"")])));
+        assert!(Tokenizer::new(b"x{}y{").eq(IntoIter::new([
             Token::Literal(b"x"),
             Token::Argument(b""),
             Token::Literal(b"y"),
         ])));
-        assert!(Tokenizer::new("{\0}").eq(IntoIter::new([Token::Argument("\0".as_bytes()),])));
-        assert!(Tokenizer::new("{{y}").eq(IntoIter::new([Token::Argument(b"{y"),])));
-        assert!(Tokenizer::new("{{{{xyz").eq(IntoIter::new([])));
-        assert!(Tokenizer::new("x{}{{}}}}").eq(IntoIter::new([
+        assert!(Tokenizer::new(b"{\0}").eq(IntoIter::new([Token::Argument("\0".as_bytes()),])));
+        assert!(Tokenizer::new(b"{{y}").eq(IntoIter::new([Token::Argument(b"{y"),])));
+        assert!(Tokenizer::new(b"{{{{xyz").eq(IntoIter::new([])));
+        assert!(Tokenizer::new(b"x{}{{}}}}").eq(IntoIter::new([
             Token::Literal(b"x"),
             Token::Argument(b""),
             Token::Argument(b"{"),

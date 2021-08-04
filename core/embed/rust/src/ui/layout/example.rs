@@ -37,12 +37,9 @@ extern "C" fn ui_layout_new_example(param: Obj) -> Obj {
     LayoutObj::new(Child::new(Dialog::new(
         display::screen(),
         |area| {
-            Text::new(area)
-                .format(
-                    "Testing text layout, with some text, and some more text. And {some} {param}",
-                )
-                .with(b"some", "a few".into())
-                .with(b"param", param)
+            Text::new(area, param)
+                .with(b"some", "a few")
+                .with(b"param", "xx")
         },
         |area| Button::with_text(area, b"Left", theme::button_default()),
         |area| Button::with_text(area, b"Right", theme::button_default()),
@@ -98,9 +95,11 @@ mod tests {
         let layout = Child::new(Dialog::new(
             display::screen(),
             |area| {
-                Text::new(area)
-                    .format("Testing text layout, with some text, and some more text. And {param}")
-                    .with(b"param", b"parameters!")
+                Text::new(
+                    area,
+                    "Testing text layout, with some text, and some more text. And {param}",
+                )
+                .with(b"param", b"parameters!")
             },
             |area| Button::with_text(area, b"Left", theme::button_default()),
             |area| Button::with_text(area, b"Right", theme::button_default()),
