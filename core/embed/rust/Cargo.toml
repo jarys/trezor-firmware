@@ -33,17 +33,17 @@ split-debuginfo = "unpacked"
 version = "0.2.1"
 
 [dependencies.heapless]
-version = "0.7.0"
+version = "0.7.3"
 default_features = false
 
 [dependencies.cstr_core]
-version = "0.2.2"
+version = "0.2.4"
 default_features = false
 
 # Build dependencies
 
 [build-dependencies.bindgen]
-version = "0.58.0"
+version = "0.59.1"
 default_features = false
 features = ["runtime"]
 
@@ -51,7 +51,7 @@ features = ["runtime"]
 
 [build-dependencies.cc]
 optional = true
-version = "1.0.68"
+version = "1.0.69"
 
 [build-dependencies.glob]
 optional = true
