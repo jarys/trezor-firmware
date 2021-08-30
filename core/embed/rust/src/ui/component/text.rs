@@ -443,8 +443,8 @@ impl<'a> Iterator for Tokenizer<'a> {
     type Item = Token<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        const ASCII_OPEN_BRACE: u8 = 123;
-        const ASCII_CLOSED_BRACE: u8 = 125;
+        const ASCII_OPEN_BRACE: u8 = b'{';
+        const ASCII_CLOSED_BRACE: u8 = b'}';
 
         match self.inner.next() {
             // Argument token is starting. Read until we find '}', then parse the content between
@@ -536,10 +536,10 @@ impl Span {
         hyphen_font: Font,
         breaking: LineBreaking,
     ) -> Self {
-        const ASCII_LF: u8 = 10;
-        const ASCII_CR: u8 = 13;
-        const ASCII_SPACE: u8 = 32;
-        const ASCII_HYPHEN: u8 = 45;
+        const ASCII_LF: u8 = b'\n';
+        const ASCII_CR: u8 = b'\r';
+        const ASCII_SPACE: u8 = b' ';
+        const ASCII_HYPHEN: u8 = b'-';
 
         fn is_whitespace(ch: u8) -> bool {
             ch == ASCII_SPACE || ch == ASCII_LF || ch == ASCII_CR
