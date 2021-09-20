@@ -1,20 +1,5 @@
 mod base;
-mod button;
-mod dialog;
-mod empty;
-mod label;
-mod map;
-mod page;
-mod passphrase;
-mod pin;
-mod swipe;
-pub mod text;
+pub mod model_t1;
+pub mod model_tt;
 
 pub use base::{Child, Component, Event, EventCtx, Never, TimerToken};
-pub use button::{Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet};
-pub use dialog::{Dialog, DialogMsg};
-pub use empty::Empty;
-pub use label::{Label, LabelStyle};
-pub use map::Map;
-pub use swipe::{Swipe, SwipeDirection};
-pub use text::{LineBreaking, PageBreaking, Text, TextLayout};

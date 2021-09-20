@@ -4,13 +4,13 @@ use core::slice;
 use heapless::LinearMap;
 
 use crate::ui::{
+    component::{Component, Event, EventCtx, Never},
     display,
     display::{Color, Font},
     geometry::{Offset, Point, Rect},
-    theme,
 };
 
-use super::{Component, Event, EventCtx, Never};
+use super::theme;
 
 pub const MAX_ARGUMENTS: usize = 6;
 

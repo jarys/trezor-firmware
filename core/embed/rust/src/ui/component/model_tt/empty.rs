@@ -1,4 +1,4 @@
-use super::base::{Component, Event, EventCtx, Never};
+use crate::ui::component::{Component, Event, EventCtx, Never};
 
 pub struct Empty;
 

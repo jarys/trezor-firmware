@@ -1,5 +1,5 @@
-use super::{
-    component::{ButtonStyle, ButtonStyleSheet, LabelStyle},
+use crate::ui::{
+    component::model_tt::{ButtonStyle, ButtonStyleSheet, LabelStyle},
     display::{Color, Font},
 };
 

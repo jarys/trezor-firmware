@@ -1,11 +1,10 @@
 use core::ops::Deref;
 
+use crate::ui::component::{Component, Event, EventCtx, Never};
 use crate::ui::{
     display::{self, Color, Font},
     geometry::{Align, Point, Rect},
 };
-
-use super::base::{Component, Event, EventCtx, Never};
 
 pub struct LabelStyle {
     pub font: Font,

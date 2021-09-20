@@ -1,9 +1,9 @@
-use crate::ui::geometry::{Grid, Rect};
-
-use super::{
-    base::{Child, Component, Event, EventCtx},
-    button::{Button, ButtonMsg::Clicked},
+use crate::ui::{
+    component::{Child, Component, Event, EventCtx},
+    geometry::{Grid, Rect},
 };
+
+use super::button::{Button, ButtonMsg::Clicked};
 
 pub enum DialogMsg<T: Component> {
     Content(T::Msg),

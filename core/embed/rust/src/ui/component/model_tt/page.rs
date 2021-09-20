@@ -1,13 +1,10 @@
 use crate::ui::{
+    component::{Component, Event, EventCtx, Never},
     display,
     geometry::{Offset, Point, Rect},
-    theme,
 };
 
-use super::{
-    base::{Component, Event, EventCtx},
-    Never, Swipe, SwipeDirection,
-};
+use super::{theme, Swipe, SwipeDirection};
 
 pub enum PageMsg<T: Component> {
     Content(T::Msg),

@@ -2,15 +2,15 @@ use heapless::Vec;
 
 use crate::trezorhal::random;
 use crate::ui::{
+    component::{Child, Component, Event, EventCtx, Never},
     display,
     geometry::{Grid, Offset, Point, Rect},
-    theme,
 };
 
 use super::{
-    base::{Child, Component, Event, EventCtx, Never},
     button::{Button, ButtonContent, ButtonMsg::Clicked},
     label::{Label, LabelStyle},
+    theme,
 };
 
 pub enum PinDialogMsg {

@@ -1,9 +1,8 @@
 use crate::ui::{
+    component::{Component, Event, EventCtx},
     display::{self, Color, Font},
     geometry::{Offset, Rect},
 };
-
-use super::base::{Component, Event, EventCtx};
 
 pub enum ButtonMsg {
     Clicked,

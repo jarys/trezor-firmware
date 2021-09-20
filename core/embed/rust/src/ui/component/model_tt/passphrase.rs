@@ -3,15 +3,15 @@ use core::time::Duration;
 use heapless::Vec;
 
 use crate::ui::{
+    component::{Child, Component, Event, EventCtx, Never, TimerToken},
     display,
     geometry::{Grid, Rect},
-    theme,
 };
 
 use super::{
-    base::{Child, Component, Event, EventCtx, Never, TimerToken},
     button::{Button, ButtonContent, ButtonMsg::Clicked},
     swipe::{Swipe, SwipeDirection},
+    theme,
 };
 
 pub enum PassphraseKeyboardMsg {

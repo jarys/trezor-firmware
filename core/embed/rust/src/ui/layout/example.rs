@@ -3,8 +3,11 @@ use core::convert::TryInto;
 use crate::{
     micropython::{buffer::Buffer, obj::Obj},
     ui::{
-        component::{Button, Child, Component, Dialog, DialogMsg, Never, Text},
-        display, theme,
+        component::{
+            model_tt::{theme, Button, Dialog, DialogMsg, Text},
+            Child, Component, Never,
+        },
+        display,
     },
 };
 
