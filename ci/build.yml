@@ -99,6 +99,7 @@ core unix regular build:
       - core/build/unix/trezor-emu-core
       - core/build/unix/genhdr/qstrdefs.generated.h # needed by test_rust
       - core/build/unix/rust                        # needed by test_rust
+      - core/build/unix/embed                       # needed by test_rust
     expire_in: 1 week
 
 core unix frozen regular build:
