@@ -38,6 +38,18 @@ pub fn rounded_rect(r: Rect, fg_color: Color, bg_color: Color, radius: u8) {
     );
 }
 
+pub fn icon(r: Rect, data: &[u8], fg_color: Color, bg_color: Color) {
+    display::icon(
+        r.x0,
+        r.y0,
+        r.width(),
+        r.height(),
+        data,
+        fg_color.into(),
+        bg_color.into(),
+    );
+}
+
 pub fn text(baseline: Point, text: &[u8], font: Font, fg_color: Color, bg_color: Color) {
     display::text(
         baseline.x,
@@ -46,7 +58,7 @@ pub fn text(baseline: Point, text: &[u8], font: Font, fg_color: Color, bg_color:
         font.0,
         fg_color.into(),
         bg_color.into(),
-    )
+    );
 }
 
 pub fn text_width(text: &[u8], font: Font) -> i32 {

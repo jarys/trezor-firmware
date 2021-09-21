@@ -18,6 +18,9 @@ pub enum PinDialogMsg {
     Cancelled,
 }
 
+const MAX_LENGTH: usize = 9;
+const DIGIT_COUNT: usize = 10; // 0..10
+
 pub struct PinDialog {
     digits: Vec<u8, MAX_LENGTH>,
     major_prompt: Label<&'static [u8]>,
@@ -28,9 +31,6 @@ pub struct PinDialog {
     confirm_btn: Child<Button>,
     digit_btns: [Child<Button>; DIGIT_COUNT],
 }
-
-const MAX_LENGTH: usize = 9;
-const DIGIT_COUNT: usize = 10; // 0..10
 
 impl PinDialog {
     pub fn new(area: Rect, major_prompt: &'static [u8], minor_prompt: &'static [u8]) -> Self {
@@ -62,18 +62,18 @@ impl PinDialog {
         // Control buttons.
         let grid = Grid::new(area, 5, 3);
         let reset_btn = Child::new(Button::with_text(
-            grid.cell(12),
+            grid.row_col(4, 0),
             b"Reset",
             theme::button_clear(),
         ));
-        let cancel_btn = Child::new(Button::with_text(
-            grid.cell(12),
-            b"Cancel",
+        let cancel_btn = Child::new(Button::with_image(
+            grid.row_col(4, 0),
+            theme::ICON_CANCEL,
             theme::button_cancel(),
         ));
-        let confirm_btn = Child::new(Button::with_text(
-            grid.cell(14),
-            b"Confirm",
+        let confirm_btn = Child::new(Button::with_image(
+            grid.row_col(4, 2),
+            theme::ICON_CONFIRM,
             theme::button_clear(),
         ));
 
@@ -136,11 +136,11 @@ impl PinDialog {
         }
         if self.digits.is_empty() {
             self.reset_btn.mutate(ctx, |ctx, btn| btn.disable(ctx));
-            self.cancel_btn.mutate(ctx, |ctx, btn| btn.disable(ctx));
+            self.cancel_btn.mutate(ctx, |ctx, btn| btn.enable(ctx));
             self.confirm_btn.mutate(ctx, |ctx, btn| btn.disable(ctx));
         } else {
             self.reset_btn.mutate(ctx, |ctx, btn| btn.enable(ctx));
-            self.cancel_btn.mutate(ctx, |ctx, btn| btn.enable(ctx));
+            self.cancel_btn.mutate(ctx, |ctx, btn| btn.disable(ctx));
             self.confirm_btn.mutate(ctx, |ctx, btn| btn.enable(ctx));
         }
         let digit_count = self.digits.len();
@@ -184,12 +184,13 @@ impl Component for PinDialog {
     }
 
     fn paint(&mut self) {
-        self.major_prompt.paint();
-        self.minor_prompt.paint();
         if self.digits.is_empty() {
             self.cancel_btn.paint();
+            self.major_prompt.paint();
+            self.minor_prompt.paint();
         } else {
             self.reset_btn.paint();
+            self.dots.paint();
         }
         self.confirm_btn.paint();
         for btn in &mut self.digit_btns {

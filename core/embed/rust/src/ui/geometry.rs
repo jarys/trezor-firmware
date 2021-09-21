@@ -224,6 +224,6 @@ impl Grid {
     }
 
     pub fn cell(&self, index: usize) -> Rect {
-        self.row_col(index / self.rows, index % self.cols)
+        self.row_col(index / self.cols, index % self.cols)
     }
 }

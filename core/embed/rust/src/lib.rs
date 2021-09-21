@@ -10,6 +10,7 @@ mod micropython;
 mod protobuf;
 mod trace;
 mod trezorhal;
+#[macro_use]
 mod ui;
 mod util;
 

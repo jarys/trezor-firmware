@@ -186,7 +186,7 @@ impl PassphraseKeyboard {
     fn key_content(&self, page: usize, key: usize) -> &'static [u8] {
         match self.key_btns[page][key].inner().content() {
             ButtonContent::Text(text) => text,
-            ButtonContent::Image(_) => b" ",
+            ButtonContent::Icon(_) => b" ",
         }
     }
 

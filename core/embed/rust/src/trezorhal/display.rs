@@ -25,6 +25,16 @@ extern "C" {
         b: cty::uint16_t,
         r: cty::uint8_t,
     );
+    fn display_icon(
+        x: cty::c_int,
+        y: cty::c_int,
+        w: cty::c_int,
+        h: cty::c_int,
+        data: *const cty::c_void,
+        len: cty::uint32_t,
+        fgcolor: cty::uint16_t,
+        bgcolor: cty::uint16_t,
+    );
 }
 
 const WIDTH: i32 = 240;
@@ -66,4 +76,19 @@ pub fn bar(x: i32, y: i32, w: i32, h: i32, fgcolor: u16) {
 
 pub fn bar_radius(x: i32, y: i32, w: i32, h: i32, fgcolor: u16, bgcolor: u16, radius: u8) {
     unsafe { display_bar_radius(x, y, w, h, fgcolor, bgcolor, radius) }
+}
+
+pub fn icon(x: i32, y: i32, w: i32, h: i32, data: &[u8], fgcolor: u16, bgcolor: u16) {
+    unsafe {
+        display_icon(
+            x,
+            y,
+            w,
+            h,
+            data.as_ptr() as _,
+            data.len() as _,
+            fgcolor,
+            bgcolor,
+        )
+    }
 }

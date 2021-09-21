@@ -30,6 +30,13 @@ pub const GREY_DARK: Color = Color::rgb(51, 51, 51); // black
 // Commonly used corner radius (i.e. for buttons).
 pub const RADIUS: u8 = 4;
 
+// Size of icons in the UI (i.e. inside buttons).
+pub const ICON_SIZE: i32 = 16;
+
+// UI icons.
+pub const ICON_CANCEL: &[u8] = include_res!("cancel.toif");
+pub const ICON_CONFIRM: &[u8] = include_res!("confirm.toif");
+
 pub fn label_default() -> LabelStyle {
     LabelStyle {
         font: FONT_NORMAL,

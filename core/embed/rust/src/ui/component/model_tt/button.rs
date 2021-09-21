@@ -4,6 +4,8 @@ use crate::ui::{
     geometry::{Offset, Rect},
 };
 
+use super::theme;
+
 pub enum ButtonMsg {
     Clicked,
 }
@@ -30,7 +32,7 @@ impl Button {
     }
 
     pub fn with_image(area: Rect, image: &'static [u8], styles: ButtonStyleSheet) -> Self {
-        Self::new(area, ButtonContent::Image(image), styles)
+        Self::new(area, ButtonContent::Icon(image), styles)
     }
 
     pub fn enable(&mut self, ctx: &mut EventCtx) {
@@ -168,8 +170,10 @@ impl Component for Button {
                     style.button_color,
                 );
             }
-            ButtonContent::Image(_image) => {
-                todo!();
+            ButtonContent::Icon(icon) => {
+                let size = Offset::uniform(theme::ICON_SIZE);
+                let area = Rect::from_center_and_size(self.area.center(), size);
+                display::icon(area, icon, style.text_color, style.button_color);
             }
         }
     }
@@ -181,7 +185,7 @@ impl crate::trace::Trace for Button {
         t.open("Button");
         match self.content {
             ButtonContent::Text(text) => t.field("text", &text),
-            ButtonContent::Image(_) => t.symbol("image"),
+            ButtonContent::Icon(_) => t.symbol("icon"),
         }
         t.close();
     }
@@ -197,7 +201,7 @@ enum State {
 
 pub enum ButtonContent {
     Text(&'static [u8]),
-    Image(&'static [u8]),
+    Icon(&'static [u8]),
 }
 
 pub struct ButtonStyleSheet {
