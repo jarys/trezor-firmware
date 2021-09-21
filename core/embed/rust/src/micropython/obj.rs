@@ -371,6 +371,18 @@ impl TryFrom<Obj> for usize {
     }
 }
 
+impl<T> From<Option<T>> for Obj
+where
+    T: Into<Obj>,
+{
+    fn from(val: Option<T>) -> Self {
+        match val {
+            Some(v) => v.into(),
+            None => Self::const_none(),
+        }
+    }
+}
+
 impl From<TryFromIntError> for Error {
     fn from(_: TryFromIntError) -> Self {
         Self::OutOfRange
