@@ -9,6 +9,7 @@ use crate::{
         },
         display,
     },
+    util,
 };
 
 use super::obj::LayoutObj;
@@ -21,8 +22,8 @@ where
     fn from(val: DialogMsg<T>) -> Self {
         match val {
             DialogMsg::Content(c) => c.into(),
-            DialogMsg::LeftClicked => 1.into(),
-            DialogMsg::RightClicked => 2.into(),
+            DialogMsg::LeftClicked => 1.try_into().unwrap(),
+            DialogMsg::RightClicked => 2.try_into().unwrap(),
         }
     }
 }
@@ -35,19 +36,21 @@ impl From<Never> for Obj {
 
 #[no_mangle]
 extern "C" fn ui_layout_new_example(param: Obj) -> Obj {
-    let param: Buffer = param.try_into().unwrap();
-
-    LayoutObj::new(Child::new(Dialog::new(
-        display::screen(),
-        |area| {
-            Text::new(area, param)
-                .with(b"some", "a few")
-                .with(b"param", "xx")
-        },
-        |area| Button::with_text(area, b"Left", theme::button_default()),
-        |area| Button::with_text(area, b"Right", theme::button_default()),
-    )))
-    .into()
+    let block = move || {
+        let param: Buffer = param.try_into()?;
+        let layout = LayoutObj::new(Child::new(Dialog::new(
+            display::screen(),
+            |area| {
+                Text::new(area, param)
+                    .with(b"some", "a few")
+                    .with(b"param", "xx")
+            },
+            |area| Button::with_text(area, b"Left", theme::button_default()),
+            |area| Button::with_text(area, b"Right", theme::button_default()),
+        )))?;
+        Ok(layout.into())
+    };
+    unsafe { util::try_or_raise(block) }
 }
 
 #[cfg(test)]

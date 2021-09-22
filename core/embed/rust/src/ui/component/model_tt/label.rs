@@ -1,7 +1,7 @@
 use core::ops::Deref;
 
-use crate::ui::component::{Component, Event, EventCtx, Never};
 use crate::ui::{
+    component::{Component, Event, EventCtx, Never},
     display::{self, Color, Font},
     geometry::{Align, Point, Rect},
 };

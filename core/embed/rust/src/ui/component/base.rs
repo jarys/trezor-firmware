@@ -1,5 +1,4 @@
-use core::mem;
-use core::time::Duration;
+use core::{mem, time::Duration};
 
 use heapless::Vec;
 

@@ -14,8 +14,10 @@ use crate::{
     util,
 };
 
-use super::decode::Decoder;
-use super::defs::{find_name_by_msg_offset, get_msg, MsgDef};
+use super::{
+    decode::Decoder,
+    defs::{find_name_by_msg_offset, get_msg, MsgDef},
+};
 
 #[repr(C)]
 pub struct MsgObj {
@@ -71,8 +73,10 @@ impl MsgObj {
             }
             Qstr::MP_QSTR_MESSAGE_NAME => {
                 // Return the QSTR name of this message def.
-                let name =
-                    Qstr::from_u16(find_name_by_msg_offset(self.msg_offset).ok_or(Error::Missing)?);
+                let name = Qstr::from_u16(
+                    find_name_by_msg_offset(self.msg_offset)
+                        .ok_or_else(|| Error::KeyError(self.msg_offset.into()))?,
+                );
                 Ok(name.into())
             }
             Qstr::MP_QSTR___dict__ => {
@@ -132,11 +136,11 @@ unsafe extern "C" fn msg_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj)
 
         unsafe {
             if dest.read().is_null() {
-                // Load attribute
+                // Load attribute.
                 dest.write(this.getattr(attr)?);
             } else {
                 let value = dest.offset(1).read();
-                // Store attribute
+                // Store attribute.
                 Gc::as_mut(&mut this).setattr(attr, value)?;
                 dest.write(Obj::const_null());
             }
@@ -214,7 +218,10 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
         match attr {
             Qstr::MP_QSTR_MESSAGE_NAME => {
                 // Return the QSTR name of this message def.
-                let name = Qstr::from_u16(find_name_by_msg_offset(this.def.offset)?);
+                let name = Qstr::from_u16(
+                    find_name_by_msg_offset(this.def.offset)
+                        .ok_or_else(|| Error::KeyError(this.def.offset.into()))?,
+                );
                 unsafe {
                     dest.write(name.into());
                 };

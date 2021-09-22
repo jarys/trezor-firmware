@@ -1,5 +1,7 @@
-use core::iter::{Enumerate, Peekable};
-use core::slice;
+use core::{
+    iter::{Enumerate, Peekable},
+    slice,
+};
 
 use heapless::LinearMap;
 
