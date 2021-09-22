@@ -5,8 +5,8 @@ use crate::ui::{
 
 use super::button::{Button, ButtonMsg::Clicked};
 
-pub enum DialogMsg<T: Component> {
-    Content(T::Msg),
+pub enum DialogMsg<T> {
+    Content(T),
     LeftClicked,
     RightClicked,
 }
@@ -40,7 +40,7 @@ impl<T: Component> Dialog<T> {
 }
 
 impl<T: Component> Component for Dialog<T> {
-    type Msg = DialogMsg<T>;
+    type Msg = DialogMsg<T::Msg>;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some(msg) = self.content.event(ctx, event) {

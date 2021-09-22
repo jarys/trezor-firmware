@@ -26,18 +26,18 @@ use crate::{
 /// wrapping trait that is implemented for all components where `Component::Msg`
 /// can be converted to `Obj`.
 pub trait ObjComponent {
-    fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Obj;
+    fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error>;
     fn obj_paint(&mut self);
 }
 
 impl<T> ObjComponent for Child<T>
 where
     T: Component,
-    T::Msg: Into<Obj>,
+    T::Msg: TryInto<Obj, Error = Error>,
 {
-    fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Obj {
+    fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error> {
         self.event(ctx, event)
-            .map_or_else(Obj::const_none, Into::into)
+            .map_or_else(|| Ok(Obj::const_none()), TryInto::try_into)
     }
 
     fn obj_paint(&mut self) {
@@ -105,12 +105,15 @@ impl LayoutObj {
     fn obj_event(&self, event: Event) -> Result<Obj, Error> {
         let inner = &mut *self.inner.borrow_mut();
 
-        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
-        let msg = unsafe { Gc::as_mut(&mut inner.root) }.obj_event(&mut inner.event_ctx, event);
-
-        // Clear the upwards-propagating paint request flag, all concerning `Child`
-        // wrappers should have already marked themselves for painting.
+        // Clear the upwards-propagating paint request flag from the last event pass.
         inner.event_ctx.clear_paint_requests();
+
+        // Send the event down the component tree. Bail out in case of failure.
+        // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
+        let msg = unsafe { Gc::as_mut(&mut inner.root) }.obj_event(&mut inner.event_ctx, event)?;
+
+        // All concerning `Child` wrappers should have already marked themselves for
+        // painting by now, and we're prepared for a paint pass.
 
         // Drain any pending timers into the callback.
         while let Some((token, deadline)) = inner.event_ctx.pop_timer() {

@@ -1,11 +1,12 @@
-use core::convert::TryInto;
+use core::convert::{TryFrom, TryInto};
 
 use crate::{
+    error::Error,
     micropython::{buffer::Buffer, obj::Obj},
     ui::{
         component::{
             model_tt::{theme, Button, Dialog, DialogMsg, Text},
-            Child, Component, Never,
+            Child, Never,
         },
         display,
     },
@@ -14,16 +15,18 @@ use crate::{
 
 use super::obj::LayoutObj;
 
-impl<T> From<DialogMsg<T>> for Obj
+impl<T> TryFrom<DialogMsg<T>> for Obj
 where
-    T: Component,
-    T::Msg: Into<Obj>,
+    Obj: TryFrom<T>,
+    Error: From<<T as TryInto<Obj>>::Error>,
 {
-    fn from(val: DialogMsg<T>) -> Self {
+    type Error = Error;
+
+    fn try_from(val: DialogMsg<T>) -> Result<Self, Self::Error> {
         match val {
-            DialogMsg::Content(c) => c.into(),
-            DialogMsg::LeftClicked => 1.try_into().unwrap(),
-            DialogMsg::RightClicked => 2.try_into().unwrap(),
+            DialogMsg::Content(c) => Ok(c.try_into()?),
+            DialogMsg::LeftClicked => 1.try_into(),
+            DialogMsg::RightClicked => 2.try_into(),
         }
     }
 }
