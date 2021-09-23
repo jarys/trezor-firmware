@@ -14,17 +14,34 @@ use crate::{
         typ::Type,
     },
     ui::{
-        component::{Child, Component, Event, EventCtx, TimerToken},
+        component::{Child, Component, Event, EventCtx, Never, TimerToken},
         geometry::Point,
     },
     util,
 };
 
+/// Conversion trait implemented by components that know how to convert their
+/// message values into MicroPython `Obj`s. We can automatically implement
+/// `ComponentMsgObj` for components whose message types implement `TryInto`.
+pub trait ComponentMsgObj: Component {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error>;
+}
+
+impl<T> ComponentMsgObj for T
+where
+    T: Component,
+    T::Msg: TryInto<Obj, Error = Error>,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        msg.try_into()
+    }
+}
+
 /// In order to store any type of component in a layout, we need to access it
 /// through an object-safe trait. `Component` itself is not object-safe because
 /// of `Component::Msg` associated type. `ObjComponent` is a simple object-safe
 /// wrapping trait that is implemented for all components where `Component::Msg`
-/// can be converted to `Obj`.
+/// can be converted to `Obj` through the `ComponentMsgObj` trait.
 pub trait ObjComponent {
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error>;
     fn obj_paint(&mut self);
@@ -32,12 +49,14 @@ pub trait ObjComponent {
 
 impl<T> ObjComponent for Child<T>
 where
-    T: Component,
-    T::Msg: TryInto<Obj, Error = Error>,
+    T: ComponentMsgObj,
 {
     fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error> {
-        self.event(ctx, event)
-            .map_or_else(|| Ok(Obj::const_none()), TryInto::try_into)
+        if let Some(msg) = self.event(ctx, event) {
+            self.inner().msg_try_into_obj(msg)
+        } else {
+            Ok(Obj::const_none())
+        }
     }
 
     fn obj_paint(&mut self) {
@@ -248,6 +267,12 @@ impl TryFrom<Duration> for Obj {
     fn try_from(value: Duration) -> Result<Self, Self::Error> {
         let millis: usize = value.as_millis().try_into()?;
         millis.try_into()
+    }
+}
+
+impl From<Never> for Obj {
+    fn from(_: Never) -> Self {
+        unreachable!()
     }
 }
 

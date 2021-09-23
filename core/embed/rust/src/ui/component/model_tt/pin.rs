@@ -68,12 +68,12 @@ impl PinDialog {
             b"Reset",
             theme::button_clear(),
         ));
-        let cancel_btn = Child::new(Button::with_image(
+        let cancel_btn = Child::new(Button::with_icon(
             grid.row_col(4, 0),
             theme::ICON_CANCEL,
             theme::button_cancel(),
         ));
-        let confirm_btn = Child::new(Button::with_image(
+        let confirm_btn = Child::new(Button::with_icon(
             grid.row_col(4, 2),
             theme::ICON_CONFIRM,
             theme::button_clear(),

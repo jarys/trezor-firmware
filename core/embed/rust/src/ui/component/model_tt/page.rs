@@ -6,8 +6,8 @@ use crate::ui::{
 
 use super::{theme, Swipe, SwipeDirection};
 
-pub enum PageMsg<T: Component> {
-    Content(T::Msg),
+pub enum PageMsg<T> {
+    Content(T),
     ChangePage(usize),
 }
 
@@ -32,7 +32,7 @@ impl<T> Page<T> {
 }
 
 impl<T: Component> Component for Page<T> {
-    type Msg = PageMsg<T>;
+    type Msg = PageMsg<T::Msg>;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some(swipe) = self.swipe.event(ctx, event) {

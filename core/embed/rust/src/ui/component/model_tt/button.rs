@@ -31,7 +31,7 @@ impl Button {
         Self::new(area, ButtonContent::Text(text), styles)
     }
 
-    pub fn with_image(area: Rect, image: &'static [u8], styles: ButtonStyleSheet) -> Self {
+    pub fn with_icon(area: Rect, image: &'static [u8], styles: ButtonStyleSheet) -> Self {
         Self::new(area, ButtonContent::Icon(image), styles)
     }
 

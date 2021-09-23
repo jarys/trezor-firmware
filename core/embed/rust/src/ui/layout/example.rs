@@ -6,7 +6,7 @@ use crate::{
     ui::{
         component::{
             model_tt::{theme, Button, Dialog, DialogMsg, Text},
-            Child, Never,
+            Child,
         },
         display,
     },
@@ -28,12 +28,6 @@ where
             DialogMsg::LeftClicked => 1.try_into(),
             DialogMsg::RightClicked => 2.try_into(),
         }
-    }
-}
-
-impl From<Never> for Obj {
-    fn from(_: Never) -> Self {
-        unreachable!()
     }
 }
 

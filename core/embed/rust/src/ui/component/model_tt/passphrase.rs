@@ -118,7 +118,8 @@ impl PassphraseKeyboard {
         });
         let text = KEYBOARD[page][key].as_bytes();
         if text == b" " {
-            todo!()
+            let icon = theme::ICON_SPACE;
+            Child::new(Button::with_icon(area, icon, theme::button_default()))
         } else {
             Child::new(Button::with_text(area, text, theme::button_default()))
         }
@@ -227,13 +228,9 @@ impl Component for PassphraseKeyboard {
                 return None;
             }
         }
-        let mut clicked_key = None;
-        for (i, btn) in self.key_btns[self.key_page].iter_mut().enumerate() {
-            if let Some(Clicked) = btn.event(ctx, event) {
-                clicked_key.replace(i);
-                break;
-            }
-        }
+        let clicked_key = self.key_btns[self.key_page]
+            .iter_mut()
+            .position(|btn| matches!(btn.event(ctx, event), Some(Clicked)));
         if let Some(key) = clicked_key {
             // Key button was clicked. If this button is pending, let's cycle the pending
             // character in textbox. If not, let's just append the first character.
