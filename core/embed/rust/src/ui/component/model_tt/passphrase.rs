@@ -228,14 +228,13 @@ impl Component for PassphraseKeyboard {
                 return None;
             }
         }
-        let clicked_key = self.key_btns[self.key_page]
-            .iter_mut()
-            .position(|btn| matches!(btn.event(ctx, event), Some(Clicked)));
-        if let Some(key) = clicked_key {
-            // Key button was clicked. If this button is pending, let's cycle the pending
-            // character in textbox. If not, let's just append the first character.
-            self.on_key_click(ctx, key);
-            return None;
+        for (key, btn) in self.key_btns[self.key_page].iter_mut().enumerate() {
+            if let Some(Clicked) = btn.event(ctx, event) {
+                // Key button was clicked. If this button is pending, let's cycle the pending
+                // character in textbox. If not, let's just append the first character.
+                self.on_key_click(ctx, key);
+                return None;
+            }
         }
         None
     }
