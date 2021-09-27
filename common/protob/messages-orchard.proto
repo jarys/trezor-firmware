@@ -1,0 +1,24 @@
+syntax = "proto2";
+package hw.trezor.messages.orchard;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageOrchard";
+
+
+//ORCHARD MESSAGES:
+
+/**
+ * Request: Test message
+ */
+message OrchardTestInput {
+    required bytes hello_input = 1;
+}
+
+/**
+ * Response: Test message
+ */
+message OrchardTestOutput {
+    required bytes hello_output = 1;
+}
+

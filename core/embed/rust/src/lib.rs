@@ -10,6 +10,8 @@ mod protobuf;
 mod trezorhal;
 mod util;
 
+mod orchard;
+
 #[cfg(not(test))]
 use core::panic::PanicInfo;
 #[cfg(not(test))]

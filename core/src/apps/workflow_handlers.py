@@ -175,6 +175,10 @@ def find_message_handler_module(msg_type: int) -> str:
         elif msg_type == MessageType.BinanceSignTx:
             return "apps.binance.sign_tx"
 
+        # orchard
+        elif msg_type == MessageType.OrchardTestInput:
+            return "apps.orchard.test"
+
     raise ValueError
 
 
