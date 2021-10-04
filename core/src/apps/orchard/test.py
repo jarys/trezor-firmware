@@ -3,8 +3,6 @@ from trezor.crypto import random
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_action, draw_simple_text
 
-from trezor.crypto import orchard
-import trezorproto
 import trezororchard
 
 if False:

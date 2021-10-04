@@ -378,6 +378,8 @@ apps.misc.get_entropy
 import apps.misc.get_entropy
 apps.misc.sign_identity
 import apps.misc.sign_identity
+apps.orchard.test
+import apps.orchard.test
 apps.workflow_handlers
 import apps.workflow_handlers
 

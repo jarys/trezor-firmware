@@ -238,6 +238,8 @@ class MessageType(IntEnum):
     WebAuthnCredentials = 801
     WebAuthnAddResidentCredential = 802
     WebAuthnRemoveResidentCredential = 803
+    OrchardTestInput = 900
+    OrchardTestOutput = 901
 
 
 class FailureType(IntEnum):
@@ -5808,6 +5810,34 @@ class NEMCosignatoryModification(protobuf.MessageType):
     ) -> None:
         self.type = type
         self.public_key = public_key
+
+
+class OrchardTestInput(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 900
+    FIELDS = {
+        1: protobuf.Field("hello_input", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        hello_input: "bytes",
+    ) -> None:
+        self.hello_input = hello_input
+
+
+class OrchardTestOutput(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 901
+    FIELDS = {
+        1: protobuf.Field("hello_output", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        hello_output: "bytes",
+    ) -> None:
+        self.hello_output = hello_output
 
 
 class RippleGetAddress(protobuf.MessageType):
