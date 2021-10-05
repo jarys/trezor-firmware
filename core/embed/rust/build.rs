@@ -83,6 +83,7 @@ fn generate_micropython_bindings() {
         .allowlist_var("mp_type_fun_builtin_3")
         // gc
         .allowlist_function("gc_alloc")
+        .allowlist_function("gc_free")
         // iter
         .allowlist_type("mp_obj_iter_buf_t")
         .allowlist_function("mp_getiter")
