@@ -1,5 +1,5 @@
 use core::{
-    alloc::Layout,
+    alloc::{GlobalAlloc, Layout},
     ops::Deref,
     ptr::{self, NonNull},
 };
@@ -51,6 +51,28 @@ impl<T> Gc<T> {
         unsafe { this.0.as_mut() }
     }
 }
+
+struct Allocator {}
+
+unsafe impl GlobalAlloc for Allocator {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        let raw = unsafe { ffi::gc_alloc(layout.size(), 0) };
+        if raw.is_null() {
+            panic!("allocation error")
+        }
+        raw as *mut u8
+    }
+    unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
+        unsafe {
+            ffi::gc_free(ptr as *mut cty::c_void);
+        }
+    }
+
+    //unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8;
+}
+
+#[global_allocator]
+static ALLOCATOR: Allocator = Allocator {};
 
 impl<T: ?Sized> Gc<T> {
     /// Construct a `Gc` from a raw pointer.
