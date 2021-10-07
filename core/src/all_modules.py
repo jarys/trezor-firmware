@@ -378,8 +378,6 @@ apps.misc.get_entropy
 import apps.misc.get_entropy
 apps.misc.sign_identity
 import apps.misc.sign_identity
-apps.orchard.test
-import apps.orchard.test
 apps.workflow_handlers
 import apps.workflow_handlers
 
@@ -650,6 +648,10 @@ if utils.BITCOIN_ONLY:
     import apps.nem.validators
     apps.nem.writers
     import apps.nem.writers
+    apps.orchard
+    import apps.orchard
+    apps.orchard.test
+    import apps.orchard.test
     apps.ripple
     import apps.ripple
     apps.ripple.base58_ripple

@@ -1,5 +1,6 @@
 use core::{
-    alloc::{GlobalAlloc, Layout},
+    //alloc::{GlobalAlloc, Layout},
+    alloc::Layout,
     ops::Deref,
     ptr::{self, NonNull},
 };
@@ -51,7 +52,7 @@ impl<T> Gc<T> {
         unsafe { this.0.as_mut() }
     }
 }
-
+/**
 struct Allocator {}
 
 unsafe impl GlobalAlloc for Allocator {
@@ -72,7 +73,7 @@ unsafe impl GlobalAlloc for Allocator {
 }
 
 #[global_allocator]
-static ALLOCATOR: Allocator = Allocator {};
+static ALLOCATOR: Allocator = Allocator {}; // **/
 
 impl<T: ?Sized> Gc<T> {
     /// Construct a `Gc` from a raw pointer.

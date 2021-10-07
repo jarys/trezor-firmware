@@ -2,6 +2,8 @@
 #![deny(clippy::all)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![allow(dead_code)]
+//#![feature(default_alloc_error_handler)]
+//#![feature(alloc_error_handler)]
 
 mod error;
 #[macro_use]
@@ -34,3 +36,8 @@ fn panic(_info: &PanicInfo) -> ! {
     // `PanicInfo::location()`.
     trezorhal::common::fatal_error(empty, msg, empty, 0, empty);
 }
+
+/*#[alloc_error_handler]
+fn foo(_: core::alloc::Layout) -> ! {
+    panic!("Alloc Error");
+}*/

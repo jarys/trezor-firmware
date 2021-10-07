@@ -28,6 +28,7 @@ ALTCOINS = (
     "stellar",
     "tezos",
     "webauthn",
+    "orchard"
 )
 
 pyfiles = chain.from_iterable(sorted(SRCDIR.glob(p)) for p in PATTERNS)

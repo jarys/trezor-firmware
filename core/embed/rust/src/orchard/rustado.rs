@@ -1,4 +1,4 @@
-#![no_std]
+//#![no_std]
 use core::convert::{TryFrom, TryInto};
 
 use core::ops::Deref;
@@ -17,9 +17,20 @@ use crate::{
     util,
 };
 
+//use static_alloc::Bump;
+
+//#[global_allocator]
+//static A: Bump<[u8; 1 << 13]> = Bump::uninit(); // 8kB heap
+
 #[no_mangle]
 pub extern "C" fn orchard_shield(plain: Obj) -> Obj {
     let block = || {
+        /**
+        {
+            extern crate alloc;
+            use alloc::boxed::Box;
+            let a = Box::new(4);
+        } // */
         let buf = Buffer::try_from(plain)?;
         let mut bytes: [u8; 32] = buf.deref().try_into().unwrap();
         //let bytes = slice_as_array!(bytes, [u8; 32]).expect("bad hash length");

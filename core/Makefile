@@ -120,7 +120,7 @@ mypy:
 		src/trezor/ui
 
 clippy:
-	cd embed/rust ; cargo clippy
+	cd embed/rust ; cargo +nightly clippy
 
 ## code generation:
 

@@ -27,6 +27,8 @@ codegen-units = 1
 cty = "0.2.1"
 pasta_curves = { git = "https://github.com/jarys/pasta_curves.git", branch = "no-std-hashtocurve", default-features = false }
 sinsemilla_trezor = { git = "https://github.com/jarys/sinsemilla_trezor.git", default_features = false}
+# static-alloc = { version = "0.2.3" , default-features = false }
+# orchard = { path = "/home/agi/code/orchard" }
 
 [dependencies.cstr_core]
 version = "0.2.2"
