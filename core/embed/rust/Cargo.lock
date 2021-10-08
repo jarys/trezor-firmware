@@ -3,6 +3,12 @@
 version = 3
 
 [[package]]
+name = "alloc-traits"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6b2d54853319fd101b8dd81de382bcbf3e03410a64d8928bbee85a3e7dcde483"
+
+[[package]]
 name = "bindgen"
 version = "0.58.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -126,6 +132,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "orchard_hww"
+version = "0.1.0"
+source = "git+https://github.com/jarys/orchard_hww.git?branch=alloc-8kB#df27bbe14d9e28f7aeab14dd0df7cf88f3d9c170"
+dependencies = [
+ "static-alloc",
+]
+
+[[package]]
 name = "peeking_take_while"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -177,6 +191,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
 
 [[package]]
+name = "static-alloc"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ba7261e1a48f13244bf2bdfcbddf87567570749056c8747d23b2afa485b8e35"
+dependencies = [
+ "alloc-traits",
+]
+
+[[package]]
 name = "trezor_lib"
 version = "0.1.0"
 dependencies = [
@@ -185,6 +208,7 @@ dependencies = [
  "cstr_core",
  "cty",
  "glob",
+ "orchard_hww",
 ]
 
 [[package]]

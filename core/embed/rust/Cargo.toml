@@ -25,6 +25,7 @@ codegen-units = 1
 
 [dependencies]
 cty = "0.2.1"
+orchard_hww = { git = "https://github.com/jarys/orchard_hww.git", branch = "alloc-8kB"}
 
 [dependencies.cstr_core]
 version = "0.2.2"
