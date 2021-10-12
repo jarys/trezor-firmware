@@ -3,6 +3,18 @@
 version = 3
 
 [[package]]
+name = "arrayref"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4c527152e37cf757a3f78aae5a06fbeefdb07ccc535c980a3208ee3060dd544"
+
+[[package]]
+name = "arrayvec"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
+
+[[package]]
 name = "bindgen"
 version = "0.58.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -26,6 +38,17 @@ name = "bitflags"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a"
+
+[[package]]
+name = "blake2b_simd"
+version = "0.5.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "afa748e348ad3be8263be728124b24a24f268266f6f5d58af9d75f6a40b5c587"
+dependencies = [
+ "arrayref",
+ "arrayvec",
+ "constant_time_eq",
+]
 
 [[package]]
 name = "cc"
@@ -60,6 +83,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "constant_time_eq"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
+
+[[package]]
 name = "cstr_core"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -76,10 +105,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7313c0d620d0cb4dbd9d019e461a4beb501071ff46ec0ab933efb4daa76d73e3"
 
 [[package]]
+name = "ff"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2958d04124b9f27f175eaeb9a9f383d026098aa837eadd8ba22c11f13a05b9e"
+dependencies = [
+ "rand_core",
+ "subtle",
+]
+
+[[package]]
 name = "glob"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
+
+[[package]]
+name = "group"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc5ac374b108929de78460075f3dc439fa66df9d8fc77e8f12caa5165fcf0c89"
+dependencies = [
+ "ff",
+ "rand_core",
+ "subtle",
+]
 
 [[package]]
 name = "lazy_static"
@@ -126,6 +176,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "pasta_curves"
+version = "0.2.1"
+source = "git+https://github.com/jarys/pasta_curves.git?branch=no-std-hashtocurve#efb70fd0d31b7cabbd2ea9cfeece38f6b65e36e2"
+dependencies = [
+ "blake2b_simd",
+ "ff",
+ "group",
+ "rand",
+ "static_assertions",
+ "subtle",
+]
+
+[[package]]
 name = "peeking_take_while"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -148,6 +211,21 @@ checksum = "c3d0b9745dc2debf507c8422de05d7226cc1f0644216dfdfead988f9b1ab32a7"
 dependencies = [
  "proc-macro2",
 ]
+
+[[package]]
+name = "rand"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2e7573632e6454cf6b99d7aac4ccca54be06da05aca2ef7423d22d27d4d4bcd8"
+dependencies = [
+ "rand_core",
+]
+
+[[package]]
+name = "rand_core"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d34f1408f55294453790c48b2f1ebbb1c5b4b7563eb1f418bcfcfdbb06ebb4e7"
 
 [[package]]
 name = "regex"
@@ -177,6 +255,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
 
 [[package]]
+name = "sinsemilla_trezor"
+version = "0.1.0"
+source = "git+https://github.com/jarys/sinsemilla_trezor.git#bd52a9ec265ad1f706bd6ba446d172c35d7a612e"
+dependencies = [
+ "group",
+ "pasta_curves",
+ "subtle",
+]
+
+[[package]]
+name = "static_assertions"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "subtle"
+version = "2.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
+
+[[package]]
 name = "trezor_lib"
 version = "0.1.0"
 dependencies = [
@@ -185,6 +285,7 @@ dependencies = [
  "cstr_core",
  "cty",
  "glob",
+ "sinsemilla_trezor",
 ]
 
 [[package]]

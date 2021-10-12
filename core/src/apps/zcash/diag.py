@@ -14,7 +14,7 @@ async def diag(ctx: Context, msg: DebugZcashDiagRequest) -> DebugZcashDiagRespon
     log.debug(__name__, "ins : {}".format(msg.ins))
     log.debug(__name__, "data: {}".format(msg.data))
 
-    if msg.ins == 1:
+    if msg.ins:
         return DebugZcashDiagResponse(
             data=zcash.diag(msg.ins, msg.data)
         )

@@ -25,6 +25,7 @@ codegen-units = 1
 
 [dependencies]
 cty = "0.2.1"
+sinsemilla_trezor = { git = "https://github.com/jarys/sinsemilla_trezor.git" }
 
 [dependencies.cstr_core]
 version = "0.2.2"
